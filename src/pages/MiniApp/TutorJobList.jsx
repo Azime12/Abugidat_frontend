@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useListTutorJobsQuery } from "../../redux/api/tutorMiniAppApiSlice";
 import { IoBriefcase, IoLocation, IoTime, IoCash, IoSearch } from "react-icons/io5";
 import { useTranslation } from "react-i18next";
+import TelegramInitDataCard from "../../components/shared/TelegramInitDataCard";
 
 const TutorJobList = () => {
   const { t } = useTranslation();
@@ -44,6 +45,9 @@ const TutorJobList = () => {
 
   return (
     <div>
+      {/* ── Telegram Context & initData Live Card ── */}
+      <TelegramInitDataCard defaultExpanded={true} />
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">Tutoring Jobs</h1>
