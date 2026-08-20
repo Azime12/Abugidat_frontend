@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TutorMatch — Prototype</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<style>
+  :root{
+    --blue:#3B7DD8; --blue-light:#E9F1FC;
+    --coral:#E8703A; --coral-light:#FCEAE1;
+    --green:#4E9450; --green-light:#E7F3E7;
+    --amber:#D4A017; --amber-light:#FBF1DA;
+    --cream:#FBF8F2; --white:#FFFFFF;
+    --navy:#22364A; --muted:#6B7684; --border:#E8E1D3;
+    --danger:#C0392B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#DDD6C4;display:flex;justify-content:center;padding:24px 0;min-height:100vh;}
+  .phone{width:390px;background:var(--cream);border-radius:36px;border:10px solid #1a1a1a;overflow:hidden;min-height:780px;position:relative;box-shadow:0 20px 50px rgba(0,0,0,0.3);}
+  .tg-bar{background:var(--blue);color:#fff;padding:14px 16px 10px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;}
+  .tg-bar i{font-size:20px;cursor:pointer;}
+  .tg-bar .bell{margin-left:auto;position:relative;}
+  .tg-bar .dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--coral);border-radius:50%;}
+  .screen{display:none;padding:16px;min-height:700px;}
+  .screen.active{display:block;}
+  h1{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+  h2{font-size:16px;font-weight:600;color:var(--navy);margin:0 0 10px;}
+  p.sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+  .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .btn{display:block;width:100%;text-align:center;padding:12px;border-radius:10px;border:none;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;}
+  .btn-primary{background:var(--coral);color:#fff;}
+  .btn-secondary{background:var(--white);color:var(--navy);border:1px solid var(--border);}
+  .btn-outline-blue{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue);}
+  .btn-green{background:var(--green);color:#fff;}
+  .row{display:flex;gap:8px;}
+  .chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--white);font-size:13px;color:var(--navy);cursor:pointer;white-space:nowrap;}
+  .chip.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:8px;}
+  .avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;font-size:16px;flex-shrink:0;}
+  .badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+  .badge-green{background:var(--green-light);color:var(--green);}
+  .badge-coral{background:var(--coral-light);color:var(--coral);}
+  .badge-amber{background:var(--amber-light);color:var(--amber);}
+  .tutor-card{display:flex;gap:12px;cursor:pointer;}
+  .tutor-card .info{flex:1;}
+  .tutor-card .name{font-weight:600;font-size:15px;color:var(--navy);}
+  .tutor-card .subj{font-size:12px;color:var(--muted);margin:2px 0 6px;}
+  .stars{color:var(--coral);font-size:12px;}
+  .bottomnav{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--border);display:flex;padding:8px 0;}
+  .navitem{flex:1;text-align:center;font-size:11px;color:var(--muted);cursor:pointer;}
+  .navitem i{display:block;font-size:20px;margin-bottom:2px;}
+  .navitem.active{color:var(--blue);}
+  .backbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .backbar i{font-size:20px;color:var(--navy);cursor:pointer;}
+  .backbar span{font-weight:600;color:var(--navy);font-size:16px;}
+  .slot{padding:10px;border:1px solid var(--border);border-radius:10px;text-align:center;font-size:13px;cursor:pointer;background:var(--white);color:var(--navy);}
+  .slot.selected{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+  .stat .num{font-size:20px;font-weight:700;color:var(--navy);}
+  .stat .lbl{font-size:11px;color:var(--muted);}
+  .req-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .req-row:last-child{border-bottom:none;}
+  .msg-bubble{max-width:75%;padding:10px 12px;border-radius:14px;font-size:13px;margin-bottom:8px;}
+  .msg-them{background:var(--white);border:1px solid var(--border);color:var(--navy);border-bottom-left-radius:4px;}
+  .msg-me{background:var(--blue);color:#fff;margin-left:auto;border-bottom-right-radius:4px;}
+  .role-card{border:2px solid var(--border);border-radius:14px;padding:20px;text-align:center;cursor:pointer;flex:1;}
+  .role-card.selected{border-color:var(--blue);background:var(--blue-light);}
+  .roleicon{width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;}
+  input[type=text],input[type=number],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:var(--white);color:var(--navy);margin-bottom:12px;}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+  .toggle-pill{padding:9px;border:1px solid var(--border);border-radius:10px;text-align:center;font-size:12px;background:var(--white);color:var(--navy);cursor:pointer;}
+  .toggle-pill.selected{border:2px solid var(--blue);background:var(--blue-light);}
+  .subject-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .progress{display:flex;gap:6px;margin-bottom:16px;}
+  .progress div{flex:1;height:4px;border-radius:2px;background:var(--border);}
+  .progress div.done{background:var(--blue);}
+  .notif-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+  .day-toggle{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .day-toggle .toggle-pill{flex:1;min-width:42px;padding:8px 0;}
+  .pay-method{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;}
+  .pay-method.selected{border:2px solid var(--blue);background:var(--blue-light);}
+  .pay-method i{font-size:22px;color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="tg-bar"><i class="ti ti-arrow-left" onclick="goBack()"></i><span id="tgtitle">TutorMatch</span>
+    <span class="bell" onclick="show('s-notif')"><i class="ti ti-bell"></i><span class="dot"></span></span>
+  </div>
+
+  <!-- SCREEN 0: Role select -->
+  <div class="screen active" id="s-role">
+    <h1>Welcome to TutorMatch</h1>
+    <p class="sub">Find the right tutor, or start teaching students today.</p>
+    <div class="row" style="margin-bottom:20px;">
+      <div class="role-card" id="role-student" onclick="pick('student')">
+        <div class="roleicon"><i class="ti ti-backpack"></i></div>
+        <div style="font-weight:600;color:var(--navy);">I'm a student</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Find a tutor</div>
+      </div>
+      <div class="role-card" id="role-tutor" onclick="pick('tutor')">
+        <div class="roleicon" style="background:var(--coral);"><i class="ti ti-school"></i></div>
+        <div style="font-weight:600;color:var(--navy);">I'm a tutor</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Start teaching</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="continueRole()">Continue</button>
+  </div>
+
+  <!-- TUTOR ONBOARDING -->
+  <div class="screen" id="s-onb-1">
+    <div class="progress"><div class="done"></div><div></div><div></div><div></div></div>
+    <h1>Tell us about you</h1>
+    <p class="sub">This appears on your public tutor profile.</p>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div class="avatar" style="background:var(--blue);width:52px;height:52px;"><i class="ti ti-camera"></i></div>
+      <button class="btn btn-secondary" style="flex:1;">Add photo</button>
+    </div>
+    <label>Full name</label>
+    <input type="text" placeholder="Amara Bekele">
+    <label>Short bio</label>
+    <textarea rows="3" placeholder="I love helping students build confidence in math."></textarea>
+    <button class="btn btn-primary" onclick="show('s-onb-2')">Continue</button>
+  </div>
+
+  <div class="screen" id="s-onb-2">
+    <div class="progress"><div class="done"></div><div class="done"></div><div></div><div></div></div>
+    <h1>What do you teach?</h1>
+    <p class="sub">Pick all subjects that apply.</p>
+    <div class="subject-grid">
+      <div class="toggle-pill selected"><i class="ti ti-math-symbols"></i> Math</div>
+      <div class="toggle-pill"><i class="ti ti-book-2"></i> English</div>
+      <div class="toggle-pill selected"><i class="ti ti-atom"></i> Physics</div>
+      <div class="toggle-pill"><i class="ti ti-flask"></i> Chemistry</div>
+      <div class="toggle-pill"><i class="ti ti-code"></i> Coding</div>
+      <div class="toggle-pill"><i class="ti ti-music"></i> Music</div>
+    </div>
+    <label>Hourly rate (ETB)</label>
+    <input type="number" value="300">
+    <button class="btn btn-primary" onclick="show('s-onb-3')">Continue</button>
+  </div>
+
+  <div class="screen" id="s-onb-3">
+    <div class="progress"><div class="done"></div><div class="done"></div><div class="done"></div><div></div></div>
+    <h1>Set your availability</h1>
+    <p class="sub">You can always change this later in schedule settings.</p>
+    <label>Available days</label>
+    <div class="day-toggle">
+      <div class="toggle-pill selected">Mon</div>
+      <div class="toggle-pill selected">Tue</div>
+      <div class="toggle-pill">Wed</div>
+      <div class="toggle-pill selected">Thu</div>
+      <div class="toggle-pill">Fri</div>
+      <div class="toggle-pill selected">Sat</div>
+      <div class="toggle-pill">Sun</div>
+    </div>
+    <label>Typical hours</label>
+    <div class="row">
+      <select><option>9:00 AM</option></select>
+      <select><option>6:00 PM</option></select>
+    </div>
+    <button class="btn btn-primary" onclick="show('s-onb-4')">Continue</button>
+  </div>
+
+  <div class="screen" id="s-onb-4">
+    <div class="progress"><div class="done"></div><div class="done"></div><div class="done"></div><div class="done"></div></div>
+    <h1>Review your profile</h1>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="avatar" style="background:var(--coral);">AB</div>
+        <div>
+          <div style="font-weight:600;color:var(--navy);">Amara Bekele</div>
+          <div style="font-size:12px;color:var(--muted);">300 ETB/hr</div>
+        </div>
+      </div>
+      <div class="row" style="flex-wrap:wrap;">
+        <span class="badge badge-green">Math</span>
+        <span class="badge badge-green">Physics</span>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="show('s-dash')">Submit for review</button>
+  </div>
+
+  <!-- SCREEN: Student home / browse -->
+  <div class="screen" id="s-browse">
+    <h1>Find a tutor</h1>
+    <p class="sub">142 tutors online near Addis Ababa</p>
+    <div class="row" style="margin-bottom:10px;">
+      <input type="text" placeholder="Search subject or tutor name" style="margin-bottom:0;">
+      <button class="btn btn-outline-blue" style="width:auto;padding:10px 14px;" onclick="show('s-filters')"><i class="ti ti-adjustments-horizontal"></i></button>
+    </div>
+    <div class="chip-row">
+      <div class="chip active">All subjects</div>
+      <div class="chip">Math</div>
+      <div class="chip">English</div>
+      <div class="chip">Physics</div>
+      <div class="chip">Coding</div>
+    </div>
+    <div class="card tutor-card" onclick="show('s-profile')">
+      <div class="avatar" style="background:var(--coral);">AB</div>
+      <div class="info">
+        <div class="name">Amara Bekele</div>
+        <div class="subj">Math, physics · 300 ETB/hr</div>
+        <span class="stars"><i class="ti ti-star-filled"></i> 4.9 (58 reviews)</span>
+      </div>
+      <span class="badge badge-green">Online</span>
+    </div>
+    <div class="card tutor-card" onclick="show('s-profile')">
+      <div class="avatar" style="background:var(--blue);">DT</div>
+      <div class="info">
+        <div class="name">Daniel Tesfaye</div>
+        <div class="subj">English, essay writing · 250 ETB/hr</div>
+        <span class="stars"><i class="ti ti-star-filled"></i> 4.8 (34 reviews)</span>
+      </div>
+      <span class="badge badge-coral">Top rated</span>
+    </div>
+    <div class="card tutor-card" onclick="show('s-profile')">
+      <div class="avatar" style="background:var(--green);">SM</div>
+      <div class="info">
+        <div class="name">Sara Mulu</div>
+        <div class="subj">Coding basics · 400 ETB/hr</div>
+        <span class="stars"><i class="ti ti-star-filled"></i> 5.0 (12 reviews)</span>
+      </div>
+      <span class="badge badge-green">Online</span>
+    </div>
+  </div>
+
+  <!-- SCREEN: Filters -->
+  <div class="screen" id="s-filters">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="show('s-browse')"></i><span>Filters</span></div>
+    <label>Price range (ETB/hr)</label>
+    <div class="row" style="margin-bottom:14px;">
+      <input type="number" placeholder="Min" style="margin-bottom:0;">
+      <input type="number" placeholder="Max" style="margin-bottom:0;">
+    </div>
+    <label>Minimum rating</label>
+    <div class="row" style="margin-bottom:14px;">
+      <div class="toggle-pill">3.5+</div>
+      <div class="toggle-pill selected">4.0+</div>
+      <div class="toggle-pill">4.5+</div>
+      <div class="toggle-pill">5.0</div>
+    </div>
+    <label>Availability</label>
+    <div class="row" style="margin-bottom:14px;">
+      <div class="toggle-pill selected">Online now</div>
+      <div class="toggle-pill">This week</div>
+    </div>
+    <label>Subjects</label>
+    <div class="subject-grid">
+      <div class="toggle-pill selected">Math</div>
+      <div class="toggle-pill">English</div>
+      <div class="toggle-pill">Physics</div>
+      <div class="toggle-pill">Coding</div>
+    </div>
+    <button class="btn btn-primary" onclick="show('s-browse')">Show 24 tutors</button>
+  </div>
+
+  <!-- SCREEN: Tutor profile -->
+  <div class="screen" id="s-profile">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="show('s-browse')"></i><span>Tutor profile</span></div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <div class="avatar" style="background:var(--coral);width:72px;height:72px;font-size:24px;margin:0 auto 10px;">AB</div>
+      <div style="font-weight:600;font-size:18px;color:var(--navy);">Amara Bekele</div>
+      <div style="font-size:13px;color:var(--muted);">Math and physics tutor · 5 years experience</div>
+      <div class="stars" style="margin-top:6px;"><i class="ti ti-star-filled"></i> 4.9 · 58 reviews</div>
+    </div>
+    <div class="card">
+      <h2>About</h2>
+      <p style="font-size:13px;color:var(--navy);line-height:1.6;">I love helping students build confidence in math. I focus on making concepts click through real-world examples rather than memorization.</p>
+    </div>
+    <div class="card">
+      <h2>Subjects</h2>
+      <div class="row" style="flex-wrap:wrap;">
+        <span class="badge badge-green">Math</span>
+        <span class="badge badge-green">Physics</span>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:12px;">
+      <div class="stat" style="flex:1;"><div class="num">300 ETB</div><div class="lbl">Per hour</div></div>
+      <div class="stat" style="flex:1;"><div class="num">120+</div><div class="lbl">Sessions taught</div></div>
+    </div>
+    <div class="row">
+      <button class="btn btn-secondary" onclick="show('s-chat')"><i class="ti ti-message-circle"></i> Message</button>
+      <button class="btn btn-primary" onclick="show('s-booking')">Book session</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Booking -->
+  <div class="screen" id="s-booking">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="show('s-profile')"></i><span>Book a session</span></div>
+    <p class="sub">With Amara Bekele · 300 ETB/hr</p>
+    <h2>Pick a day</h2>
+    <div class="chip-row">
+      <div class="chip active">Wed 13</div>
+      <div class="chip">Thu 14</div>
+      <div class="chip">Fri 15</div>
+      <div class="chip">Sat 16</div>
+    </div>
+    <h2>Pick a time</h2>
+    <div class="slot-grid" id="slots">
+      <div class="slot" onclick="pickSlot(this)">9:00 AM</div>
+      <div class="slot selected" onclick="pickSlot(this)">2:00 PM</div>
+      <div class="slot" onclick="pickSlot(this)">4:30 PM</div>
+      <div class="slot" onclick="pickSlot(this)">6:00 PM</div>
+      <div class="slot" onclick="pickSlot(this)">7:30 PM</div>
+      <div class="slot" onclick="pickSlot(this)">8:30 PM</div>
+    </div>
+    <div class="card">
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Session</span><span style="font-size:13px;color:var(--navy);">1 hour</span></div>
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Total</span><span style="font-weight:600;color:var(--navy);">300 ETB</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="show('s-payment')">Continue to payment</button>
+  </div>
+
+  <!-- SCREEN: Payment -->
+  <div class="screen" id="s-payment">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="show('s-booking')"></i><span>Payment</span></div>
+    <p class="sub">Choose how you'd like to pay.</p>
+    <div class="pay-method selected" onclick="pickPay(this)"><i class="ti ti-brand-telegram"></i><div><div style="font-weight:600;font-size:13px;color:var(--navy);">Telegram Pay</div><div style="font-size:11px;color:var(--muted);">Pay directly in Telegram</div></div></div>
+    <div class="pay-method" onclick="pickPay(this)"><i class="ti ti-device-mobile"></i><div><div style="font-weight:600;font-size:13px;color:var(--navy);">Mobile money</div><div style="font-size:11px;color:var(--muted);">Telebirr, M-Pesa</div></div></div>
+    <div class="pay-method" onclick="pickPay(this)"><i class="ti ti-credit-card"></i><div><div style="font-weight:600;font-size:13px;color:var(--navy);">Card</div><div style="font-size:11px;color:var(--muted);">Visa, Mastercard</div></div></div>
+    <div class="card">
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Session (1hr)</span><span style="font-size:13px;color:var(--navy);">300 ETB</span></div>
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Service fee</span><span style="font-size:13px;color:var(--navy);">15 ETB</span></div>
+      <div class="req-row"><span style="font-size:13px;font-weight:600;color:var(--navy);">Total</span><span style="font-weight:700;color:var(--navy);">315 ETB</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="show('s-confirm')">Pay 315 ETB</button>
+  </div>
+
+  <!-- SCREEN: Confirmation -->
+  <div class="screen" id="s-confirm">
+    <div style="text-align:center;padding:40px 0 20px;">
+      <div class="roleicon" style="background:var(--green);width:64px;height:64px;font-size:28px;"><i class="ti ti-check"></i></div>
+      <h1 style="margin-top:16px;">Booking confirmed</h1>
+      <p class="sub">You're set for Wednesday, 2:00 PM with Amara.</p>
+    </div>
+    <div class="card">
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Tutor</span><span style="font-size:13px;color:var(--navy);">Amara Bekele</span></div>
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Date</span><span style="font-size:13px;color:var(--navy);">Wed, Aug 13 · 2:00 PM</span></div>
+      <div class="req-row"><span style="font-size:13px;color:var(--muted);">Paid</span><span style="font-weight:600;color:var(--navy);">315 ETB</span></div>
+    </div>
+    <button class="btn btn-outline-blue" onclick="show('s-chat')">Message your tutor</button>
+    <div style="height:10px;"></div>
+    <button class="btn btn-secondary" onclick="show('s-browse')">Back to browse</button>
+  </div>
+
+  <!-- SCREEN: Chat -->
+  <div class="screen" id="s-chat">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="show('s-profile')"></i><span>Amara Bekele</span></div>
+    <div style="min-height:400px;">
+      <div class="msg-bubble msg-them">Hi! Looking forward to our session on Wednesday.</div>
+      <div class="msg-bubble msg-me">Great, thank you! Should I prepare anything?</div>
+      <div class="msg-bubble msg-them">Just bring your last physics test, we'll go through the mistakes together.</div>
+    </div>
+    <div class="row" style="position:sticky;bottom:8px;">
+      <input type="text" placeholder="Type a message" style="flex:1;padding:10px 12px;border-radius:20px;border:1px solid var(--border);font-size:13px;margin-bottom:0;">
+      <button style="background:var(--blue);color:#fff;border:none;border-radius:50%;width:38px;height:38px;flex-shrink:0;"><i class="ti ti-send"></i></button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Notifications -->
+  <div class="screen" id="s-notif">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="goBack()"></i><span>Notifications</span></div>
+    <div class="card">
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--green-light);color:var(--green);"><i class="ti ti-calendar-check"></i></div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">Booking confirmed</div><div style="font-size:12px;color:var(--muted);">Your session with Amara is set for Wed, 2:00 PM</div></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--blue-light);color:var(--blue);"><i class="ti ti-message-circle"></i></div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">New message</div><div style="font-size:12px;color:var(--muted);">Amara sent you a message</div></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--coral-light);color:var(--coral);"><i class="ti ti-star"></i></div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">Leave a review</div><div style="font-size:12px;color:var(--muted);">How was your session with Daniel?</div></div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--amber-light);color:var(--amber);"><i class="ti ti-clock"></i></div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">Reminder</div><div style="font-size:12px;color:var(--muted);">Session with Amara starts in 1 hour</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Tutor dashboard -->
+  <div class="screen" id="s-dash">
+    <h1>Welcome back, Amara</h1>
+    <p class="sub">Here's what's happening today.</p>
+    <div class="row" style="margin-bottom:12px;">
+      <div class="stat" style="flex:1;"><div class="num">3</div><div class="lbl">Requests</div></div>
+      <div class="stat" style="flex:1;"><div class="num">5</div><div class="lbl">This week</div></div>
+      <div class="stat" style="flex:1;"><div class="num">4,200</div><div class="lbl">ETB earned</div></div>
+    </div>
+    <div class="card">
+      <h2>New requests</h2>
+      <div class="req-row">
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">Bethel K.</div><div style="font-size:12px;color:var(--muted);">Math · Thu 4:00 PM</div></div>
+        <button class="btn btn-primary" style="width:auto;padding:6px 14px;font-size:12px;">Accept</button>
+      </div>
+      <div class="req-row">
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">Yohannes G.</div><div style="font-size:12px;color:var(--muted);">Physics · Fri 6:00 PM</div></div>
+        <button class="btn btn-primary" style="width:auto;padding:6px 14px;font-size:12px;">Accept</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Upcoming sessions</h2>
+      <div class="req-row">
+        <div><div style="font-size:13px;font-weight:600;color:var(--navy);">Selam T.</div><div style="font-size:12px;color:var(--muted);">Wed 2:00 PM · Math</div></div>
+        <span class="badge badge-green">Confirmed</span>
+      </div>
+    </div>
+    <button class="btn btn-outline-blue" onclick="show('s-schedule')"><i class="ti ti-calendar-cog"></i> Manage schedule</button>
+  </div>
+
+  <!-- SCREEN: Tutor schedule settings -->
+  <div class="screen" id="s-schedule">
+    <div class="backbar"><i class="ti ti-arrow-left" onclick="show('s-dash')"></i><span>Availability</span></div>
+    <p class="sub">Students can only book during these hours.</p>
+    <label>Available days</label>
+    <div class="day-toggle">
+      <div class="toggle-pill selected">Mon</div>
+      <div class="toggle-pill selected">Tue</div>
+      <div class="toggle-pill">Wed</div>
+      <div class="toggle-pill selected">Thu</div>
+      <div class="toggle-pill">Fri</div>
+      <div class="toggle-pill selected">Sat</div>
+      <div class="toggle-pill">Sun</div>
+    </div>
+    <label>Start time</label>
+    <select><option>9:00 AM</option><option>10:00 AM</option></select>
+    <label>End time</label>
+    <select><option>6:00 PM</option><option>8:00 PM</option></select>
+    <div class="card">
+      <div class="req-row"><span style="font-size:13px;color:var(--navy);">Block time off</span><i class="ti ti-chevron-right" style="color:var(--muted);"></i></div>
+      <div class="req-row"><span style="font-size:13px;color:var(--navy);">Session length default</span><span style="font-size:13px;color:var(--muted);">1 hour</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="show('s-dash')">Save availability</button>
+  </div>
+
+  <div class="bottomnav" id="nav" style="display:none;">
+    <div class="navitem" id="nav-home" onclick="navGo()"><i class="ti ti-home"></i>Home</div>
+    <div class="navitem" onclick="show('s-chat')"><i class="ti ti-message-circle"></i>Chat</div>
+    <div class="navitem" onclick="show('s-notif')"><i class="ti ti-bell"></i>Alerts</div>
+    <div class="navitem" onclick="show('s-role')"><i class="ti ti-user"></i>Profile</div>
+  </div>
+</div>
+
+<script>
+let role = 'student';
+let history = ['s-role'];
+
+function pick(r){
+  role = r;
+  document.getElementById('role-student').classList.toggle('selected', r==='student');
+  document.getElementById('role-tutor').classList.toggle('selected', r==='tutor');
+}
+
+function continueRole(){
+  if(role === 'student'){ show('s-browse'); } else { show('s-onb-1'); }
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  history.push(id);
+  const nav = document.getElementById('nav');
+  nav.style.display = (id === 's-role' || id.startsWith('s-onb')) ? 'none' : 'flex';
+}
+
+function goBack(){
+  if(history.length > 1){
+    history.pop();
+    const prev = history[history.length - 1];
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(prev).classList.add('active');
+  }
+}
+
+function navGo(){
+  show(role === 'student' ? 's-browse' : 's-dash');
+}
+
+function pickSlot(el){
+  document.querySelectorAll('#slots .slot').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function pickPay(el){
+  document.querySelectorAll('.pay-method').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+document.querySelectorAll('.toggle-pill').forEach(p => {
+  p.addEventListener('click', () => p.classList.toggle('selected'));
+});
+</script>
+</body>
+</html>
