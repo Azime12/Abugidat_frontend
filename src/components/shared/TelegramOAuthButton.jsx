@@ -5,9 +5,14 @@ import { toast } from "react-toastify";
 import { setUserCredentials } from "../../redux/slice/authSlice";
 import { useTutorAuthMutation } from "../../redux/api/tutorMiniAppApiSlice";
 
-const _rc = typeof window !== "undefined" ? (window.__RUNTIME_CONFIG__ || {}) : {};
-const BOT_ID = _rc.VITE_TELEGRAM_BOT_ID || import.meta.env.VITE_TELEGRAM_BOT_ID;
-const BOT_USERNAME = _rc.VITE_TELEGRAM_BOT_USERNAME || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "Testestestes12345tbot";
+// Read bot config lazily at call time so window.__RUNTIME_CONFIG__ is always available
+const getBotConfig = () => {
+  const rc = (typeof window !== "undefined" && window.__RUNTIME_CONFIG__) || {};
+  return {
+    botId: rc.VITE_TELEGRAM_BOT_ID || import.meta.env.VITE_TELEGRAM_BOT_ID || "",
+    botUsername: rc.VITE_TELEGRAM_BOT_USERNAME || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "Testestestes12345tbot",
+  };
+};
 
 /**
  * TelegramOAuthButton
@@ -92,14 +97,15 @@ export default function TelegramOAuthButton({
 
   /* ── Trigger the official Telegram OAuth popup ── */
   const openTelegramAuth = useCallback(() => {
-    if (!BOT_ID) {
-      toast.error("Telegram bot not configured. Please set VITE_TELEGRAM_BOT_ID.");
+    const { botId } = getBotConfig();
+
+    if (!botId) {
+      toast.error("Telegram bot not configured. Contact support.");
       return;
     }
 
     const tg = window.Telegram?.Login;
     if (!tg) {
-      // Script not yet loaded — retry in 500ms
       toast.info("Loading Telegram authorization...");
       setTimeout(openTelegramAuth, 600);
       return;
@@ -107,7 +113,7 @@ export default function TelegramOAuthButton({
 
     tg.auth(
       {
-        bot_id: BOT_ID,
+        bot_id: botId,
         request_access: requestAccess,
       },
       handleTelegramAuth
