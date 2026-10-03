@@ -1,12 +1,13 @@
-﻿import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { setUserCredentials } from "../../redux/slice/authSlice";
 import { useTutorAuthMutation } from "../../redux/api/tutorMiniAppApiSlice";
 
-const BOT_ID = import.meta.env.VITE_TELEGRAM_BOT_ID;
-const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "Testestestes12345tbot";
+const _rc = typeof window !== "undefined" ? (window.__RUNTIME_CONFIG__ || {}) : {};
+const BOT_ID = _rc.VITE_TELEGRAM_BOT_ID || import.meta.env.VITE_TELEGRAM_BOT_ID;
+const BOT_USERNAME = _rc.VITE_TELEGRAM_BOT_USERNAME || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "Testestestes12345tbot";
 
 /**
  * TelegramOAuthButton

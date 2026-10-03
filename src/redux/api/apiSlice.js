@@ -8,13 +8,15 @@ const baseQuery = fetchBaseQuery({
   // eslint-disable-next-line no-unused-vars
   prepareHeaders: (headers, { getState }) => {
     try {
-      const token = localStorage.getItem("token");  // Get token from localStorage
+      const token = localStorage.getItem("token");
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
       }
     } catch (error) {
       console.error("Error parsing token:", error);
     }
+    // Required by localtunnel to bypass the browser warning page for API calls
+    headers.set("bypass-tunnel-reminder", "true");
     return headers;
   },
 });

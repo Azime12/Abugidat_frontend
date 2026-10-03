@@ -11,6 +11,16 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<!-- ⚙️ Runtime configuration — update VITE_API_URL each time you restart the tunnel.
+     No rebuild needed — just edit this block and push to GitHub. -->
+<script>
+  window.__RUNTIME_CONFIG__ = {
+    VITE_API_URL: "https://happy-pianos-join.loca.lt/api",
+    VITE_TELEGRAM_BOT_ID: "8796686419",
+    VITE_TELEGRAM_BOT_USERNAME: "Testestestes12345tbot",
+  };
+</script>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
