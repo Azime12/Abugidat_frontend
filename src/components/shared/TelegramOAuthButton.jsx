@@ -90,7 +90,13 @@ export default function TelegramOAuthButton({
         if (onSuccess) onSuccess(res.tutor);
       }
     } catch (err) {
-      const msg = err?.data?.message || "Telegram authentication failed. Please try again.";
+      console.error("[TelegramOAuth] Auth error:", err);
+      const msg =
+        err?.data?.message ||
+        err?.data?.error ||
+        err?.error ||
+        err?.message ||
+        "Telegram authentication failed. Please try again.";
       toast.error(msg);
     }
   }, [tutorAuth, dispatch, navigate, onSuccess]);
