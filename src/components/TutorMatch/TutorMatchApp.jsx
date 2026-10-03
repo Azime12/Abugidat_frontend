@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import TgBar from "./TgBar";
-import BottomNav from "./BottomNav";
+import WebAppHeader from "./WebAppHeader";
 
 // Screens
 import RoleSelectionScreen from "./screens/RoleSelectionScreen";
@@ -16,15 +17,21 @@ import NotificationsScreen from "./screens/NotificationsScreen";
 import TutorDashboardScreen from "./screens/TutorDashboardScreen";
 import ScheduleSettingsScreen from "./screens/ScheduleSettingsScreen";
 
-// Default Initial Mock Tutors
+import { useGetTutorProfileQuery } from "../../redux/api/tutorMiniAppApiSlice";
+
+// Detect if running inside Telegram WebApp
+const INSIDE_TELEGRAM =
+  typeof window !== "undefined" && Boolean(window?.Telegram?.WebApp?.initData);
+
+// Default mock tutors used in StudentBrowseScreen before real data loads
 const INITIAL_TUTORS = [
   {
     id: "t1",
     name: "Amara Bekele",
     initials: "AB",
     avatarBg: "var(--coral)",
-    subjects: "Math, physics",
-    subjectList: ["Math", "Physics"],
+    subjects: "Mathematics, Physics",
+    subjectList: ["Mathematics", "Physics"],
     rate: 300,
     rating: 4.9,
     reviewsCount: 58,
@@ -39,7 +46,7 @@ const INITIAL_TUTORS = [
     name: "Daniel Tesfaye",
     initials: "DT",
     avatarBg: "var(--blue)",
-    subjects: "English, essay writing",
+    subjects: "English, Essay Writing",
     subjectList: ["English", "Essay Writing"],
     rate: 250,
     rating: 4.8,
@@ -55,8 +62,8 @@ const INITIAL_TUTORS = [
     name: "Sara Mulu",
     initials: "SM",
     avatarBg: "var(--green)",
-    subjects: "Coding basics, Python",
-    subjectList: ["Coding", "Python", "Web Dev"],
+    subjects: "Coding / IT, Python",
+    subjectList: ["Coding / IT", "Python", "Web Dev"],
     rate: 400,
     rating: 5.0,
     reviewsCount: 12,
@@ -86,20 +93,33 @@ const INITIAL_TUTORS = [
 
 export default function TutorMatchApp({
   initialRole = "student",
-  initialScreen = "s-role",
-  defaultViewMode = null,
+  initialScreen = "s-browse", // default to browse in web mode (skip role-select)
 }) {
-  const [role, setRole] = useState(initialRole);
-  const [activeScreen, setActiveScreen] = useState(initialScreen);
-  const [history, setHistory] = useState([initialScreen]);
+  const [searchParams] = useSearchParams();
+  const urlRole = searchParams.get("role");
+  const urlScreen = searchParams.get("screen");
+  const isRegisterParam = searchParams.get("register") === "true";
+
+  const resolvedInitialRole = urlRole || (isRegisterParam ? "tutor" : initialRole);
+  const resolvedInitialScreen =
+    urlScreen || (isRegisterParam ? "s-onb-1" : initialScreen);
+
+  const [role, setRole] = useState(resolvedInitialRole);
+  const [activeScreen, setActiveScreen] = useState(resolvedInitialScreen);
+  const [history, setHistory] = useState([resolvedInitialScreen]);
   const [onboardingStep, setOnboardingStep] = useState(
-    initialScreen.startsWith("s-onb-")
-      ? parseInt(initialScreen.replace("s-onb-", ""), 10) || 1
+    resolvedInitialScreen.startsWith("s-onb-")
+      ? parseInt(resolvedInitialScreen.replace("s-onb-", ""), 10) || 1
       : 1
   );
 
+  // RTK Query: fetch authenticated tutor profile if available
+  const { data: tutorProfileData } = useGetTutorProfileQuery(undefined, {
+    skip: typeof window === "undefined",
+  });
+
   // Data state
-  const [tutors, setTutors] = useState(INITIAL_TUTORS);
+  const [tutors] = useState(INITIAL_TUTORS);
   const [selectedTutor, setSelectedTutor] = useState(INITIAL_TUTORS[0]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("All subjects");
@@ -115,22 +135,48 @@ export default function TutorMatchApp({
   });
 
   const [tutorProfile, setTutorProfile] = useState({
-    name: "Amara Bekele",
-    bio: "I love helping students build confidence in math.",
-    subjects: ["Math", "Physics"],
+    name: "",
+    first_name: "",
+    last_name: "",
+    phone_number: "",
+    email: "",
+    city: "Addis Ababa",
+    gender: "",
+    student_gender_preference: "Both",
+    bio: "",
+    subjects: [],
+    grade_levels: [],
+    teaching_mode: "Both",
     hourlyRate: 300,
-    availableDays: ["Mon", "Tue", "Thu", "Sat"],
+    hourly_rate: 300,
+    education: "",
+    experience: "",
+    availableDays: [],
     startTime: "9:00 AM",
     endTime: "6:00 PM",
+    referral_code: "",
+    accumulated_invites_balance: 0,
+    is_registered: false,
   });
 
-  // Telegram mini app detection & desktop framing
-  const isInsideTelegram = typeof window !== "undefined" && Boolean(window?.Telegram?.WebApp?.initData);
-  const [viewMode, setViewMode] = useState(
-    defaultViewMode || (isInsideTelegram ? "fullscreen" : "mockup")
-  );
+  // Sync profile from backend if available
+  useEffect(() => {
+    if (tutorProfileData?.tutor) {
+      const serverTutor = tutorProfileData.tutor;
+      setTutorProfile((prev) => ({
+        ...prev,
+        ...serverTutor,
+        name:
+          serverTutor.name ||
+          [serverTutor.first_name, serverTutor.last_name].filter(Boolean).join(" ") ||
+          prev.name,
+        hourlyRate: serverTutor.hourly_rate || prev.hourlyRate,
+        is_registered: serverTutor.is_registered,
+      }));
+    }
+  }, [tutorProfileData]);
 
-  // Navigation handlers
+  // ── Navigation ─────────────────────────────────────────────
   const show = (screenId) => {
     setActiveScreen(screenId);
     setHistory((prev) => [...prev, screenId]);
@@ -144,20 +190,20 @@ export default function TutorMatchApp({
       setHistory(nextHistory);
       setActiveScreen(prevScreen);
     } else {
-      setActiveScreen("s-role");
+      setActiveScreen("s-browse");
     }
-  };
-
-  const handlePickRole = (selectedRole) => {
-    setRole(selectedRole);
   };
 
   const handleContinueRole = () => {
     if (role === "student") {
       show("s-browse");
     } else {
-      setOnboardingStep(1);
-      show("s-onb-1");
+      if (tutorProfile?.is_registered) {
+        show("s-dash");
+      } else {
+        setOnboardingStep(1);
+        show("s-onb-1");
+      }
     }
   };
 
@@ -179,222 +225,192 @@ export default function TutorMatchApp({
     setFilters(newFilters);
   };
 
-  // Screen Title for Telegram Bar
+  // ── Screen title ────────────────────────────────────────────
   const getScreenTitle = () => {
     switch (activeScreen) {
-      case "s-role":
-        return "TutorMatch";
+      case "s-role":       return "Abugida Tutor Platform";
       case "s-onb-1":
       case "s-onb-2":
       case "s-onb-3":
       case "s-onb-4":
-        return "Tutor Registration";
-      case "s-browse":
-        return "Find a Tutor";
-      case "s-filters":
-        return "Filters";
-      case "s-profile":
-        return selectedTutor?.name || "Tutor Profile";
-      case "s-booking":
-        return "Book a Session";
-      case "s-payment":
-        return "Payment";
-      case "s-confirm":
-        return "Booking Confirmed";
-      case "s-chat":
-        return selectedTutor?.name || "Chat";
-      case "s-notif":
-        return "Notifications";
-      case "s-dash":
-        return "Tutor Dashboard";
-      case "s-schedule":
-        return "Availability";
-      default:
-        return "TutorMatch";
+      case "s-onb-5":     return `Tutor Registration — Step ${onboardingStep} of 5`;
+      case "s-browse":    return "Find a Tutor";
+      case "s-filters":   return "Filters";
+      case "s-profile":   return selectedTutor?.name || "Tutor Profile";
+      case "s-booking":   return "Book a Session";
+      case "s-payment":   return "Payment";
+      case "s-confirm":   return "Booking Confirmed";
+      case "s-chat":      return selectedTutor?.name || "Chat";
+      case "s-notif":     return "Notifications";
+      case "s-dash":      return "Tutor Dashboard";
+      case "s-schedule":  return "My Availability";
+      default:            return "Abugida Tutor Platform";
     }
   };
 
-  const showBottomNav =
-    activeScreen !== "s-role" && !activeScreen.startsWith("s-onb");
-
-  return (
-    <div className={`min-h-screen flex flex-col items-center justify-center ${viewMode === "mockup" ? "bg-[#DDD6C4] py-4 px-2" : "bg-tm-cream"}`}>
-      {/* View Mode & Role Switcher Bar for Desktop Previews */}
-      {!isInsideTelegram && (
-        <div className="w-full max-w-[412px] mb-3 flex items-center justify-between px-2 text-xs text-tm-navy/80 select-none">
-          <div className="flex items-center gap-1 bg-white/80 backdrop-blur px-2.5 py-1 rounded-full border border-tm-border shadow-xs">
-            <span className="font-semibold text-tm-navy">Role:</span>
-            <button
-              onClick={() => {
-                setRole("student");
-                show("s-browse");
-              }}
-              className={`px-2 py-0.5 rounded-full transition-colors ${
-                role === "student" && activeScreen !== "s-role"
-                  ? "bg-tm-blue text-white font-medium"
-                  : "hover:text-tm-blue"
-              }`}
-            >
-              Student
-            </button>
-            <button
-              onClick={() => {
-                setRole("tutor");
-                show("s-dash");
-              }}
-              className={`px-2 py-0.5 rounded-full transition-colors ${
-                role === "tutor" && activeScreen !== "s-role"
-                  ? "bg-tm-coral text-white font-medium"
-                  : "hover:text-tm-coral"
-              }`}
-            >
-              Tutor
-            </button>
-          </div>
-
-          <button
-            onClick={() => setViewMode(viewMode === "mockup" ? "fullscreen" : "mockup")}
-            className="flex items-center gap-1.5 bg-white/80 backdrop-blur px-3 py-1 rounded-full border border-tm-border hover:bg-white shadow-xs font-medium"
-            title="Toggle phone frame mockup"
-          >
-            <i className={`ti ${viewMode === "mockup" ? "ti-device-mobile" : "ti-layout-sidebar"}`} />
-            <span>{viewMode === "mockup" ? "Phone Frame" : "Full View"}</span>
-          </button>
-        </div>
-      )}
-
-      {/* Main Container */}
-      <div
-        className={`${
-          viewMode === "mockup"
-            ? "phone-mockup"
-            : "w-full max-w-lg min-h-screen bg-tm-cream relative shadow-md flex flex-col"
-        }`}
-      >
-        {/* Telegram Top Bar */}
-        <TgBar
-          title={getScreenTitle()}
-          onBack={goBack}
-          onShowNotif={() => show("s-notif")}
-          unreadCount={1}
-          canGoBack={history.length > 1}
-        />
-
-        {/* Screen Content Router */}
-        <div className="flex-1 flex flex-col justify-between">
-          {activeScreen === "s-role" && (
-            <RoleSelectionScreen
-              role={role}
-              onPickRole={handlePickRole}
-              onContinue={handleContinueRole}
-            />
-          )}
-
-          {activeScreen.startsWith("s-onb") && (
-            <TutorOnboardingScreen
-              step={onboardingStep}
-              onNextStep={handleOnboardingNext}
-              onComplete={handleOnboardingComplete}
-              tutorProfile={tutorProfile}
-              setTutorProfile={setTutorProfile}
-            />
-          )}
-
-          {activeScreen === "s-browse" && (
-            <StudentBrowseScreen
-              tutors={tutors}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              selectedSubject={selectedSubject}
-              setSelectedSubject={setSelectedSubject}
-              onOpenFilters={() => show("s-filters")}
-              onSelectTutor={handleSelectTutor}
-            />
-          )}
-
-          {activeScreen === "s-filters" && (
-            <FiltersScreen
-              onBack={() => show("s-browse")}
-              onApplyFilters={handleApplyFilters}
-              initialFilters={filters}
-            />
-          )}
-
-          {activeScreen === "s-profile" && (
-            <TutorProfileScreen
-              tutor={selectedTutor}
-              onBack={() => show("s-browse")}
-              onStartChat={() => show("s-chat")}
-              onStartBooking={() => show("s-booking")}
-            />
-          )}
-
-          {activeScreen === "s-booking" && (
-            <BookingScreen
-              tutor={selectedTutor}
-              onBack={() => show("s-profile")}
-              onContinueToPayment={() => show("s-payment")}
-              bookingDetails={bookingDetails}
-              setBookingDetails={setBookingDetails}
-            />
-          )}
-
-          {activeScreen === "s-payment" && (
-            <PaymentScreen
-              bookingDetails={bookingDetails}
-              onBack={() => show("s-booking")}
-              onConfirmPayment={() => show("s-confirm")}
-            />
-          )}
-
-          {activeScreen === "s-confirm" && (
-            <ConfirmationScreen
-              bookingDetails={bookingDetails}
-              onMessageTutor={() => show("s-chat")}
-              onBackToBrowse={() => show("s-browse")}
-            />
-          )}
-
-          {activeScreen === "s-chat" && (
-            <ChatScreen
-              tutorName={selectedTutor?.name || "Amara Bekele"}
-              onBack={goBack}
-            />
-          )}
-
-          {activeScreen === "s-notif" && (
-            <NotificationsScreen
-              onBack={goBack}
-              onNavigateScreen={(scr) => show(scr)}
-            />
-          )}
-
-          {activeScreen === "s-dash" && (
-            <TutorDashboardScreen
-              tutorProfile={tutorProfile}
-              onManageSchedule={() => show("s-schedule")}
-            />
-          )}
-
-          {activeScreen === "s-schedule" && (
-            <ScheduleSettingsScreen
-              onBack={() => show("s-dash")}
-              onSave={() => show("s-dash")}
-              tutorProfile={tutorProfile}
-              setTutorProfile={setTutorProfile}
-            />
-          )}
-        </div>
-
-        {/* Bottom Navigation */}
-        {showBottomNav && (
-          <BottomNav
-            activeScreen={activeScreen}
-            onNavigate={(screenId) => show(screenId)}
-            role={role}
+  // ── Render ─────────────────────────────────────────────────
+  // Inside Telegram: keep the classic phone-frame experience
+  if (INSIDE_TELEGRAM) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-tm-cream">
+        <div className="w-full max-w-lg min-h-screen bg-tm-cream relative shadow-md flex flex-col">
+          <TgBar
+            title={getScreenTitle()}
+            onBack={goBack}
+            onShowNotif={() => show("s-notif")}
+            unreadCount={1}
+            canGoBack={history.length > 1}
           />
-        )}
+          <div className="flex-1 flex flex-col justify-between">
+            {renderScreenContent()}
+          </div>
+        </div>
       </div>
+    );
+  }
+
+  // In browser: full web app layout (no phone frame)
+  return (
+    <div className="min-h-screen bg-[#FBF8F2] flex flex-col">
+      {/* Web header replaces the Telegram bar */}
+      <WebAppHeader
+        activeScreen={activeScreen}
+        role={role}
+        onNavigate={(screenId) => {
+          if (screenId === "s-onb-1") {
+            setRole("tutor");
+            setOnboardingStep(1);
+          } else if (screenId === "s-browse") {
+            setRole("student");
+          } else if (screenId === "s-dash") {
+            setRole("tutor");
+          }
+          show(screenId);
+        }}
+        onBack={goBack}
+        canGoBack={history.length > 1}
+        title={getScreenTitle()}
+        unreadCount={1}
+      />
+
+      {/* Page content — full-width, no phone frame */}
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        {renderScreenContent()}
+      </main>
     </div>
   );
+
+  // ── Screen content switcher (shared between web & TG) ───────
+  function renderScreenContent() {
+    return (
+      <>
+        {activeScreen === "s-role" && (
+          <RoleSelectionScreen
+            role={role}
+            onPickRole={setRole}
+            onContinue={handleContinueRole}
+          />
+        )}
+
+        {activeScreen.startsWith("s-onb") && (
+          <TutorOnboardingScreen
+            step={onboardingStep}
+            onNextStep={handleOnboardingNext}
+            onComplete={handleOnboardingComplete}
+            tutorProfile={tutorProfile}
+            setTutorProfile={setTutorProfile}
+          />
+        )}
+
+        {activeScreen === "s-browse" && (
+          <StudentBrowseScreen
+            tutors={tutors}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedSubject={selectedSubject}
+            setSelectedSubject={setSelectedSubject}
+            onOpenFilters={() => show("s-filters")}
+            onSelectTutor={handleSelectTutor}
+          />
+        )}
+
+        {activeScreen === "s-filters" && (
+          <FiltersScreen
+            onBack={() => show("s-browse")}
+            onApplyFilters={handleApplyFilters}
+            initialFilters={filters}
+          />
+        )}
+
+        {activeScreen === "s-profile" && (
+          <TutorProfileScreen
+            tutor={selectedTutor}
+            onBack={() => show("s-browse")}
+            onStartChat={() => show("s-chat")}
+            onStartBooking={() => show("s-booking")}
+          />
+        )}
+
+        {activeScreen === "s-booking" && (
+          <BookingScreen
+            tutor={selectedTutor}
+            onBack={() => show("s-profile")}
+            onContinueToPayment={() => show("s-payment")}
+            bookingDetails={bookingDetails}
+            setBookingDetails={setBookingDetails}
+          />
+        )}
+
+        {activeScreen === "s-payment" && (
+          <PaymentScreen
+            bookingDetails={bookingDetails}
+            onBack={() => show("s-booking")}
+            onConfirmPayment={() => show("s-confirm")}
+          />
+        )}
+
+        {activeScreen === "s-confirm" && (
+          <ConfirmationScreen
+            bookingDetails={bookingDetails}
+            onMessageTutor={() => show("s-chat")}
+            onBackToBrowse={() => show("s-browse")}
+          />
+        )}
+
+        {activeScreen === "s-chat" && (
+          <ChatScreen
+            tutorName={selectedTutor?.name || "Tutor"}
+            onBack={goBack}
+          />
+        )}
+
+        {activeScreen === "s-notif" && (
+          <NotificationsScreen
+            onBack={goBack}
+            onNavigateScreen={(scr) => show(scr)}
+          />
+        )}
+
+        {activeScreen === "s-dash" && (
+          <TutorDashboardScreen
+            tutorProfile={tutorProfile}
+            onManageSchedule={() => show("s-schedule")}
+            onEditProfile={() => {
+              setOnboardingStep(1);
+              show("s-onb-1");
+            }}
+          />
+        )}
+
+        {activeScreen === "s-schedule" && (
+          <ScheduleSettingsScreen
+            onBack={() => show("s-dash")}
+            onSave={() => show("s-dash")}
+            tutorProfile={tutorProfile}
+            setTutorProfile={setTutorProfile}
+          />
+        )}
+      </>
+    );
+  }
 }

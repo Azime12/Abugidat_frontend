@@ -130,10 +130,13 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* Tutor Mini App & Prototype Routes */}
-          <Route path="/miniapp" element={<TutorMatchApp />} />
-          <Route path="/tutormatch" element={<TutorMatchApp defaultViewMode="mockup" />} />
-          <Route path="/prototype" element={<TutorMatchApp defaultViewMode="mockup" />} />
+          {/* Tutor Web App Routes — works in browser AND Telegram Mini App */}
+          <Route path="/miniapp" element={<TutorMatchApp initialRole="student" initialScreen="s-browse" />} />
+          <Route path="/miniapp/register" element={<TutorMatchApp initialRole="tutor" initialScreen="s-onb-1" />} />
+          <Route path="/miniapp/onboarding" element={<TutorMatchApp initialRole="tutor" initialScreen="s-onb-1" />} />
+          <Route path="/miniapp/dashboard" element={<TutorMatchApp initialRole="tutor" initialScreen="s-dash" />} />
+          {/* Prototype mockup (phone frame) for design review only */}
+          <Route path="/prototype" element={<TutorMatchApp />} />
 
           {/* Legacy MiniApp sub-routes if accessed directly */}
           <Route path="/miniapp-classic" element={<MiniAppLayout />}>

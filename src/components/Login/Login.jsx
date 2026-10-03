@@ -16,6 +16,7 @@ import AuthLayout from "../shared/auth/AuthLayout";
 import FormField from "../shared/auth/FormField";
 import PasswordField from "../shared/auth/PasswordField";
 import SubmitButton from "../shared/auth/SubmitButton";
+import TelegramOAuthButton from "../shared/TelegramOAuthButton";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Login = () => {
   const [login, { isLoading }] = useLoginMutation();
   const currentUser = useSelector(selectUser);
   const dispatch = useDispatch();
+
 
   useEffect(() => {
     if (currentUser) {
@@ -137,6 +139,20 @@ const Login = () => {
               <SubmitButton isLoading={isLoading} loadingText={t("signingIn")}>
                 {t("signIn")}
               </SubmitButton>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-text-sub font-semibold">Or continue with</span>
+                </div>
+              </div>
+
+              <TelegramOAuthButton
+                label="Continue with Telegram"
+                onSuccess={(tutor) => navigateBasedOnRole(tutor.role || "Tutor", navigate)}
+              />
             </form>
 
             {/* Mobile signup link */}
@@ -151,6 +167,8 @@ const Login = () => {
           </div>
         </motion.div>
       </div>
+
+
     </AuthLayout>
   );
 };

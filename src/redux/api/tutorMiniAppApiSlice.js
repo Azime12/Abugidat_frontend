@@ -2,13 +2,40 @@ import { apiSlice } from "./apiSlice";
 
 export const tutorMiniAppApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // Authenticate via Telegram Mini App initData
+    // Authenticate via Telegram Mini App initData OR web browser widget/credentials
     tutorAuth: builder.mutation({
-      query: (initData) => ({
+      query: (arg) => ({
         url: "/tutor/auth",
         method: "POST",
-        body: { initData },
+        body: typeof arg === "string" ? { initData: arg } : (arg || {}),
       }),
+      invalidatesTags: ["TutorProfile"],
+    }),
+
+    // Get current tutor profile
+    getTutorProfile: builder.query({
+      query: () => "/tutor/profile",
+      providesTags: ["TutorProfile"],
+    }),
+
+    // Register / complete tutor profile from Mini App
+    registerTutor: builder.mutation({
+      query: (profileData) => ({
+        url: "/tutor/register",
+        method: "POST",
+        body: profileData,
+      }),
+      invalidatesTags: ["TutorProfile", "Job"],
+    }),
+
+    // Update existing tutor profile
+    updateTutorProfile: builder.mutation({
+      query: (profileData) => ({
+        url: "/tutor/profile",
+        method: "PUT",
+        body: profileData,
+      }),
+      invalidatesTags: ["TutorProfile"],
     }),
 
     // List approved jobs for tutors (no parent contact info)
@@ -37,7 +64,11 @@ export const tutorMiniAppApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useTutorAuthMutation,
+  useGetTutorProfileQuery,
+  useRegisterTutorMutation,
+  useUpdateTutorProfileMutation,
   useListTutorJobsQuery,
   useGetTutorJobQuery,
   useApplyForJobMutation,
 } = tutorMiniAppApiSlice;
+

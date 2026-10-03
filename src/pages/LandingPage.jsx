@@ -1,232 +1,82 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import {
-  useGetJobsQuery,
-  useCreateJobMutation,
-} from "../redux/api/jobApiSlice";
-import { useGetTutorsQuery } from "../redux/api/tutorApiSlice";
-import { useGetDashboardStatsQuery } from "../redux/api/dashboardApiSlice";
+  useGetPublicStatsQuery,
+  useGetPublicTutorsQuery,
+  useGetPublicJobsQuery,
+  useCreatePublicJobMutation,
+} from "../redux/api/publicApiSlice";
+import { selectUser, logout } from "../redux/slice/authSlice";
 import TelegramInitDataInspector from "../components/shared/TelegramInitDataInspector";
+import TelegramLoginModal from "../components/shared/TelegramLoginModal";
+import BrowserJobApplyModal from "../components/shared/BrowserJobApplyModal";
+import NearbyTutorsMap from "../components/shared/NearbyTutorsMap";
 
-// Fallback high-quality tutors data aligned with backend model
-const DEFAULT_TUTORS = [
-  {
-    id: 1,
-    name: "Amara Bekele",
-    initials: "AB",
-    city: "Addis Ababa",
-    location: "Bole, Addis Ababa",
-    subjects: "Mathematics, Physics",
-    subjectList: ["Mathematics", "Physics", "Calculus"],
-    rate: 300,
-    rating: 4.9,
-    reviewsCount: 58,
-    badge: "Verified",
-    badgeType: "verified",
-    sessionsCount: 120,
-    experience: "5 years experience",
-    bio: "Passionate about building foundational understanding in Mathematics and Physics for Grade 9-12 national exams.",
-    avatarBg: "#E8703A",
-    phone: "0911****82",
-    available: true,
-  },
-  {
-    id: 2,
-    name: "Daniel Tesfaye",
-    initials: "DT",
-    city: "Addis Ababa",
-    location: "Kazanchis, Addis Ababa",
-    subjects: "English, Essay Writing",
-    subjectList: ["English", "Essay Writing", "SAT Prep"],
-    rate: 250,
-    rating: 4.8,
-    reviewsCount: 34,
-    badge: "Top Rated",
-    badgeType: "top",
-    sessionsCount: 85,
-    experience: "4 years experience",
-    bio: "Specializing in English grammar, conversational fluency, and high-scoring university entrance essays.",
-    avatarBg: "#3B7DD8",
-    phone: "0920****45",
-    available: true,
-  },
-  {
-    id: 3,
-    name: "Sara Mulu",
-    initials: "SM",
-    city: "Addis Ababa",
-    location: "Piassa, Addis Ababa",
-    subjects: "Coding, Python, Web Dev",
-    subjectList: ["Coding", "Python", "JavaScript"],
-    rate: 400,
-    rating: 5.0,
-    reviewsCount: 12,
-    badge: "Verified",
-    badgeType: "verified",
-    sessionsCount: 40,
-    experience: "3 years experience",
-    bio: "Software Engineer providing project-based interactive coding lessons for school and university students.",
-    avatarBg: "#4E9450",
-    phone: "0913****90",
-    available: true,
-  },
-  {
-    id: 4,
-    name: "Dawit Haile",
-    initials: "DH",
-    city: "Addis Ababa",
-    location: "Megenagna, Addis Ababa",
-    subjects: "Chemistry, Biology",
-    subjectList: ["Chemistry", "Biology", "Grade 12 Prep"],
-    rate: 280,
-    rating: 4.7,
-    reviewsCount: 29,
-    badge: "Verified",
-    badgeType: "verified",
-    sessionsCount: 95,
-    experience: "6 years experience",
-    bio: "Biomedical Sciences graduate focusing on conceptual clarity and past national exam problem walkthroughs.",
-    avatarBg: "#D4A017",
-    phone: "0944****12",
-    available: true,
-  },
-  {
-    id: 5,
-    name: "Bethelhem Kassa",
-    initials: "BK",
-    city: "Addis Ababa",
-    location: "Sarbet, Addis Ababa",
-    subjects: "Economics, Business Math",
-    subjectList: ["Economics", "Accounting", "Business Math"],
-    rate: 320,
-    rating: 4.9,
-    reviewsCount: 41,
-    badge: "Top Rated",
-    badgeType: "top",
-    sessionsCount: 110,
-    experience: "4 years experience",
-    bio: "Economics lecturer offering intuitive visual breakdowns for high school and university freshmen.",
-    avatarBg: "#8E44AD",
-    phone: "0918****33",
-    available: true,
-  },
-  {
-    id: 6,
-    name: "Yohannes Girma",
-    initials: "YG",
-    city: "Addis Ababa",
-    location: "CMC, Addis Ababa",
-    subjects: "Music Theory, Piano, Guitar",
-    subjectList: ["Music", "Piano", "Guitar"],
-    rate: 350,
-    rating: 5.0,
-    reviewsCount: 19,
-    badge: "Verified",
-    badgeType: "verified",
-    sessionsCount: 60,
-    experience: "5 years experience",
-    bio: "Structured music theory and instrument coaching for children and adult beginners.",
-    avatarBg: "#E67E22",
-    phone: "0933****78",
-    available: true,
-  },
+// Avatar colour palette — deterministic from tutor id
+const AVATAR_COLORS = ["#E8703A", "#3B7DD8", "#4E9450", "#D4A017", "#8E44AD", "#E67E22", "#1B7A8C", "#C0392B"];
+
+const POPULAR_LOCATIONS = [
+  "All",
+  "Bole",
+  "Kazanchis",
+  "CMC",
+  "Sarbet",
+  "Piassa",
+  "Megenagna",
+  "Gerji",
+  "22 Mazoriya",
+  "Lebu",
+  "Hawassa",
+  "Adama",
+  "Online / Remote",
 ];
 
-// Fallback open tutoring jobs aligned with backend Job model
-const DEFAULT_JOBS = [
-  {
-    id: 1,
-    student_level: "Grade 11-12",
-    subjects: "Mathematics & Physics",
-    location: "Bole (Near Medhanialem), Addis Ababa",
-    schedule: "3 days / week • 4:30 PM - 6:30 PM",
-    hourly_salary: "350",
-    gender_requirement: "Any",
-    parent_name: "Abebech T.",
-    status: "approved",
-    created_at: "2 hours ago",
-    applications_count: 3,
-  },
-  {
-    id: 2,
-    student_level: "Grade 10",
-    subjects: "Chemistry & Biology",
-    location: "Kazanchis, Addis Ababa",
-    schedule: "Weekends • 9:00 AM - 12:00 PM",
-    hourly_salary: "300",
-    gender_requirement: "Female",
-    parent_name: "Mulugeta K.",
-    status: "approved",
-    created_at: "5 hours ago",
-    applications_count: 2,
-  },
-  {
-    id: 3,
-    student_level: "Grade 8 (Ministry Prep)",
-    subjects: "Mathematics & General Science",
-    location: "Sarbet, Addis Ababa",
-    schedule: "4 days / week • 5:00 PM - 7:00 PM",
-    hourly_salary: "280",
-    gender_requirement: "Any",
-    parent_name: "Selamawit G.",
-    status: "approved",
-    created_at: "1 day ago",
-    applications_count: 5,
-  },
-  {
-    id: 4,
-    student_level: "Grade 9",
-    subjects: "English & Essay Writing",
-    location: "CMC, Addis Ababa",
-    schedule: "2 days / week • 4:00 PM - 6:00 PM",
-    hourly_salary: "320",
-    gender_requirement: "Any",
-    parent_name: "Yonas B.",
-    status: "approved",
-    created_at: "1 day ago",
-    applications_count: 1,
-  },
-  {
-    id: 5,
-    student_level: "High School & College",
-    subjects: "Python Programming & Coding Basics",
-    location: "Online / Virtual Zoom",
-    schedule: "Flexible • 3 hours / week",
-    hourly_salary: "450",
-    gender_requirement: "Any",
-    parent_name: "Dawit M.",
-    status: "approved",
-    created_at: "2 days ago",
-    applications_count: 4,
-  },
-];
+// Skeleton loading card
+function SkeletonCard({ lines = 4 }) {
+  return (
+    <div className="bg-white rounded-3xl p-6 border border-[#E8E1D3] shadow-sm animate-pulse space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-[#E8E1D3]" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 bg-[#E8E1D3] rounded w-2/3" />
+          <div className="h-2 bg-[#E8E1D3] rounded w-1/2" />
+        </div>
+      </div>
+      {Array.from({ length: lines }).map((_, i) => (
+        <div key={i} className="h-2 bg-[#E8E1D3] rounded" style={{ width: `${70 + (i % 3) * 10}%` }} />
+      ))}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const currentUser = useSelector(selectUser);
 
-  // Active view toggle: Parent / Student vs Tutor
+  // Active portal tab: parent vs tutor
   const [activePortal, setActivePortal] = useState("parent"); // "parent" | "tutor"
-
-  // Parent Tab: Browse Tutors vs Post Job
-  const [parentSubTab, setParentSubTab] = useState("browse"); // "browse" | "post"
-
-  // Tutor Tab: Open Jobs vs Earnings Calculator
-  const [tutorSubTab, setTutorSubTab] = useState("jobs"); // "jobs" | "calc"
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("All");
-  const [selectedLevel, setSelectedLevel] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All");
+  const [selectedLevel, setSelectedLevel] = useState("All");
 
-  // Modals state
-  const [selectedTutorForBooking, setSelectedTutorForBooking] = useState(null);
-  const [selectedJobForApply, setSelectedJobForApply] = useState(null);
+  // Minimized Map state (default false per user request to minimize map view)
+  const [showMap, setShowMap] = useState(false);
+
+  // Browser Auth & Application Modals
+  const [showTelegramLogin, setShowTelegramLogin] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [selectedJobToApply, setSelectedJobToApply] = useState(null);
+  const [appliedJobIds, setAppliedJobIds] = useState([]);
+
+  // Post Job Modal State
   const [showPostJobModal, setShowPostJobModal] = useState(false);
-
-  // Parent Post Job Form State
   const [postJobForm, setPostJobForm] = useState({
     parent_name: "",
     parent_phone_contact: "",
@@ -240,69 +90,67 @@ export default function LandingPage() {
   });
   const [isSubmittingJob, setIsSubmittingJob] = useState(false);
 
-  // Backend Queries (Graceful fallback to mock data if offline/empty)
-  const { data: jobsApiData } = useGetJobsQuery(undefined, { refetchOnMountOrArgChange: false });
-  const { data: tutorsApiData } = useGetTutorsQuery(undefined, { refetchOnMountOrArgChange: false });
-  const { data: statsApiData } = useGetDashboardStatsQuery(undefined, { refetchOnMountOrArgChange: false });
-  const [createJobMutation] = useCreateJobMutation();
+  // ── Public API queries (no auth required) ─────────────────────────────
+  const {
+    data: tutorsData,
+    isLoading: tutorsLoading,
+  } = useGetPublicTutorsQuery({ limit: 20 });
 
-  // Normalize backend stats structure (handles both direct & nested stats.jobs/tutors)
+  const {
+    data: jobsData,
+    isLoading: jobsLoading,
+    refetch: refetchJobs,
+  } = useGetPublicJobsQuery({ limit: 20 });
+
+  const { data: statsData } = useGetPublicStatsQuery();
+
+  const [createPublicJob] = useCreatePublicJobMutation();
+
+  // Resolved lists — real DB data only, no mock fallback
+  const tutorsList = Array.isArray(tutorsData?.tutors) ? tutorsData.tutors : [];
+  const jobsList = Array.isArray(jobsData?.jobs) ? jobsData.jobs : [];
+
+  // Live stats (or zero while loading)
   const stats = {
-    totalJobs:
-      statsApiData?.stats?.jobs?.total ??
-      statsApiData?.totalJobs ??
-      (jobsList?.length || 184),
-    approvedJobs:
-      statsApiData?.stats?.jobs?.approved ??
-      statsApiData?.approvedJobs ??
-      128,
-    totalTutors:
-      statsApiData?.stats?.tutors?.total ??
-      statsApiData?.totalTutors ??
-      (tutorsList?.length || 142),
-    totalMatches:
-      statsApiData?.stats?.matches?.total ??
-      statsApiData?.totalMatches ??
-      312,
-    pendingApplications:
-      statsApiData?.stats?.applications?.pending ?? 48,
-    satisfaction: 99,
+    totalJobs: statsData?.stats?.totalJobs ?? 0,
+    approvedJobs: statsData?.stats?.approvedJobs ?? 0,
+    totalTutors: statsData?.stats?.totalTutors ?? 0,
+    totalMatches: statsData?.stats?.totalMatches ?? 0,
   };
 
-  // Helper to normalize tutor object from backend Tutor model
+  // Normalize tutor — public API already shapes fields, this adds display helpers
   const normalizeTutor = (t) => {
-    const fullName =
-      t.name ||
-      `${t.first_name || ""} ${t.last_name || ""}`.trim() ||
-      (t.telegram_id ? `@${t.telegram_id}` : `Verified Tutor #${t.id}`);
-
-    const initials =
-      t.initials ||
-      `${t.first_name?.[0] || ""}${t.last_name?.[0] || ""}`.toUpperCase() ||
-      fullName.substring(0, 2).toUpperCase() ||
-      "TR";
-
+    const nameParts = [t.name, t.first_name, t.last_name].filter(Boolean);
+    const fullName = nameParts.length ? nameParts.join(" ") : `Tutor #${t.id}`;
+    const initials = fullName
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "TR";
     return {
       ...t,
       name: fullName,
       initials,
-      location: t.location || (t.city ? `${t.city}, Ethiopia` : "Addis Ababa, Ethiopia"),
-      subjects: t.subjects || "Mathematics, Physics",
-      subjectList: t.subjectList || (t.subjects ? t.subjects.split(",").map((s) => s.trim()) : ["Mathematics", "Physics"]),
-      rate: t.rate || t.hourly_salary || 300,
-      rating: t.rating || 4.9,
-      reviewsCount: t.reviewsCount || 42,
-      sessionsCount: t.sessionsCount || 80,
-      badge: t.badge || (t.is_admin ? "Lead Tutor" : "Verified"),
-      badgeType: t.badgeType || (t.is_admin ? "top" : "verified"),
-      avatarBg: t.avatarBg || (t.id % 2 === 0 ? "#3B7DD8" : "#E8703A"),
-      bio: t.bio || "Certified educator dedicated to conceptual clarity and exam confidence.",
+      location: t.location || t.city || "Addis Ababa",
+      subjects: t.subjects || "Mathematics",
+      subjectList: t.subjects
+        ? t.subjects.split(",").map((s) => s.trim())
+        : ["Mathematics"],
+      rate: t.rate || 300,
+      rating: t.rating || 4.8,
+      reviewsCount: t.reviewsCount || 0,
+      sessionsCount: t.sessionsCount || 0,
+      badge: t.badge || "Verified",
+      badgeType: t.badgeType || "verified",
+      avatarBg: AVATAR_COLORS[(t.id || 0) % AVATAR_COLORS.length],
+      bio: t.bio || "Certified educator dedicated to helping students reach their potential.",
     };
   };
 
   const normalizedTutors = tutorsList.map(normalizeTutor);
 
-  // Filter computation for Tutors
+  // Filter computation for Tutors (includes Location + Subject + Search)
   const filteredTutors = normalizedTutors.filter((tutor) => {
     const term = searchTerm.toLowerCase();
     const matchesSearch =
@@ -315,10 +163,15 @@ export default function LandingPage() {
       selectedSubject === "All" ||
       (tutor.subjects && tutor.subjects.toLowerCase().includes(selectedSubject.toLowerCase()));
 
-    return matchesSearch && matchesSubject;
+    const matchesLocation =
+      selectedLocation === "All" ||
+      (tutor.location && tutor.location.toLowerCase().includes(selectedLocation.toLowerCase())) ||
+      (selectedLocation === "Online / Remote" && tutor.teaching_mode !== "In-person");
+
+    return matchesSearch && matchesSubject && matchesLocation;
   });
 
-  // Filter computation for Jobs
+  // Filter computation for Jobs (includes Location + Subject + Level + Search)
   const filteredJobs = jobsList.filter((job) => {
     const term = searchTerm.toLowerCase();
     const matchesSearch =
@@ -335,22 +188,47 @@ export default function LandingPage() {
       selectedLevel === "All" ||
       (job.student_level && job.student_level.toLowerCase().includes(selectedLevel.toLowerCase()));
 
-    return matchesSearch && matchesSubject && matchesLevel;
+    const matchesLocation =
+      selectedLocation === "All" ||
+      (job.location && job.location.toLowerCase().includes(selectedLocation.toLowerCase()));
+
+    return matchesSearch && matchesSubject && matchesLevel && matchesLocation;
   });
 
-  // Handle Parent Post Job Submit
+  // Handle direct browser application trigger
+  const handleApplyClick = (job) => {
+    setSelectedJobToApply(job);
+    if (currentUser) {
+      setShowApplyModal(true);
+    } else {
+      setShowTelegramLogin(true);
+    }
+  };
+
+  const handleTelegramLoginSuccess = (user) => {
+    if (selectedJobToApply) {
+      setShowApplyModal(true);
+    }
+  };
+
+  // Handle Parent Post Job Submit (public endpoint — no auth required)
   const handlePostJobSubmit = async (e) => {
     e.preventDefault();
-    if (!postJobForm.parent_phone_contact || !postJobForm.subjects) {
-      toast.warning("Please fill in contact phone and subjects required.");
+    if (!postJobForm.parent_phone_contact && !postJobForm.parent_telegram_id) {
+      toast.warning("Please provide at least a phone number or Telegram username.");
+      return;
+    }
+    if (!postJobForm.subjects) {
+      toast.warning("Please enter the subjects needed.");
       return;
     }
 
     setIsSubmittingJob(true);
     try {
-      await createJobMutation(postJobForm).unwrap();
-      toast.success("Tutoring request submitted successfully! Tutors will be matched shortly.");
+      await createPublicJob(postJobForm).unwrap();
+      toast.success("✅ Tutoring request submitted! Our team will review and broadcast it to verified tutors.");
       setShowPostJobModal(false);
+      refetchJobs();
       setPostJobForm({
         parent_name: "",
         parent_phone_contact: "",
@@ -363,21 +241,12 @@ export default function LandingPage() {
         gender_requirement: "Any",
       });
     } catch (err) {
-      // If backend is unavailable, simulate success
-      toast.success("Request received! Matching with top verified tutors.");
-      setShowPostJobModal(false);
+      toast.error(err?.data?.message || "Failed to submit job request. Please try again.");
     } finally {
       setIsSubmittingJob(false);
     }
   };
 
-  // Handle Tutor One-Click Application
-  const handleApplyForJob = (job) => {
-    toast.success(`Application submitted for ${job.subjects} (${job.location})! Check Telegram for status.`);
-    setSelectedJobForApply(null);
-  };
-
-  // Subject quick filter pills
   const subjectsFilterList = [
     "All",
     "Mathematics",
@@ -385,7 +254,7 @@ export default function LandingPage() {
     "Chemistry",
     "Biology",
     "English",
-    "Coding",
+    "Coding / IT",
     "Economics",
   ];
 
@@ -418,10 +287,9 @@ export default function LandingPage() {
             <button
               onClick={() => {
                 setActivePortal("parent");
-                setParentSubTab("browse");
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activePortal === "parent" && parentSubTab === "browse"
+                activePortal === "parent"
                   ? "bg-white text-[#3B7DD8] shadow-xs"
                   : "text-[#6B7684] hover:text-[#22364A]"
               }`}
@@ -433,7 +301,6 @@ export default function LandingPage() {
             <button
               onClick={() => {
                 setActivePortal("tutor");
-                setTutorSubTab("jobs");
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 activePortal === "tutor"
@@ -449,6 +316,14 @@ export default function LandingPage() {
             </button>
 
             <button
+              onClick={() => navigate("/miniapp/register")}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-[#E8703A] hover:bg-white transition-all flex items-center gap-1.5"
+            >
+              <i className="ti ti-user-plus text-sm" />
+              <span>Become a Tutor</span>
+            </button>
+
+            <button
               onClick={() => setShowPostJobModal(true)}
               className="px-4 py-2 rounded-xl text-xs font-bold text-[#4E9450] hover:bg-white transition-all flex items-center gap-1.5"
             >
@@ -458,53 +333,86 @@ export default function LandingPage() {
           </nav>
 
           {/* Right Action buttons */}
-          <div className="flex items-center gap-2.5">
-            {/* Telegram User & InitData Badge */}
+          <div className="flex items-center gap-2">
             <TelegramInitDataInspector />
 
-            {/* Telegram Mini App Shortcut */}
-            <button
-              onClick={() => navigate("/miniapp")}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 bg-[#E9F1FC] text-[#3B7DD8] border border-[#3B7DD8]/30 rounded-xl text-xs font-bold hover:bg-[#3B7DD8] hover:text-white transition-all shadow-2xs"
-            >
-              <i className="ti ti-brand-telegram text-base" />
-              <span>Telegram App</span>
-            </button>
+            {/* If logged in via Telegram or web */}
+            {currentUser ? (
+              <div className="flex items-center gap-1.5 bg-[#E9F1FC] p-1 pr-2 rounded-2xl border border-[#3B7DD8]/30">
+                <div className="w-7 h-7 rounded-xl bg-[#3B7DD8] text-white flex items-center justify-center font-bold text-xs">
+                  {currentUser.first_name ? currentUser.first_name[0].toUpperCase() : "T"}
+                </div>
+                <div className="hidden sm:block text-left mr-1">
+                  <div className="text-[11px] font-extrabold text-[#22364A] leading-none">
+                    {currentUser.first_name || currentUser.name || "Tutor"}
+                  </div>
+                  <div className="text-[9px] text-[#3B7DD8] font-bold">
+                    {currentUser.telegram_id ? `@${currentUser.telegram_id}` : "Connected"}
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate("/miniapp/dashboard")}
+                  className="px-2.5 py-1 bg-[#3B7DD8] hover:bg-[#2D6BBB] text-white rounded-xl text-[11px] font-bold transition-all shadow-2xs"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    dispatch(logout());
+                    toast.info("Logged out successfully");
+                  }}
+                  className="p-1 text-[#6B7684] hover:text-[#C0392B] rounded-lg transition-colors"
+                  title="Log out"
+                >
+                  <i className="ti ti-logout text-sm" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowTelegramLogin(true)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#E9F1FC] text-[#3B7DD8] border border-[#3B7DD8]/30 rounded-xl text-xs font-bold hover:bg-[#3B7DD8] hover:text-white transition-all shadow-2xs"
+              >
+                <i className="ti ti-brand-telegram text-base" />
+                <span className="hidden sm:inline">Login with Telegram</span>
+                <span className="sm:hidden">Login</span>
+              </button>
+            )}
 
             {/* Post Job CTA */}
             <button
               onClick={() => setShowPostJobModal(true)}
-              className="px-4 py-2 bg-[#E8703A] hover:bg-[#D6602A] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+              className="px-3.5 py-2 bg-[#E8703A] hover:bg-[#D6602A] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 flex-shrink-0"
             >
               <i className="ti ti-sparkles text-sm" />
-              <span>Request a Tutor</span>
+              <span className="hidden sm:inline">Request a Tutor</span>
+              <span className="sm:hidden">Request</span>
             </button>
 
             {/* Login / Admin portal */}
             <button
               onClick={() => navigate("/login")}
-              className="p-2 rounded-xl text-[#22364A] hover:bg-[#FBF8F2] border border-[#E8E1D3] transition-colors"
-              title="Admin & Staff Portal"
+              className="p-2 rounded-xl text-[#22364A] hover:bg-[#FBF8F2] border border-[#E8E1D3] transition-colors flex-shrink-0"
+              title="Staff & Admin Portal"
             >
-              <i className="ti ti-user-shield text-lg" />
+              <i className="ti ti-user-shield text-base" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* ──────── 2. HERO BANNER & ROLE SWITCHER ──────── */}
-      <section className="bg-gradient-to-b from-white to-[#FBF8F2] border-b border-[#E8E1D3] py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
+      {/* ──────── 2. HERO BANNER & PORTAL SWITCHER ──────── */}
+      <section className="bg-gradient-to-b from-white to-[#FBF8F2] border-b border-[#E8E1D3] py-10 sm:py-14 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Main Title & Subtitle */}
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#E9F1FC] border border-[#3B7DD8]/30 text-[#3B7DD8] text-xs font-bold shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-[#4E9450] animate-ping" />
-              <span>Telegram-First Tutor Matching & Job Marketplace in Ethiopia</span>
+              <span>Telegram-First Tutor Matching & Geospatial Marketplace in Ethiopia</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#22364A] tracking-tight leading-[1.15]">
               Connecting <span className="text-[#3B7DD8]">Students & Parents</span> with{" "}
-              <span className="text-[#E8703A]">Verified Tutors</span>
+              <span className="text-[#E8703A]">Nearby Verified Tutors</span>
             </h1>
 
             <p className="text-sm sm:text-base text-[#6B7684] leading-relaxed">
@@ -512,13 +420,12 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Role Mode Cards (Parent/Student vs Tutor) */}
+          {/* Role Mode Cards */}
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {/* Student/Parent Card */}
             <div
               onClick={() => {
                 setActivePortal("parent");
-                setParentSubTab("browse");
               }}
               className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-start gap-4 shadow-sm ${
                 activePortal === "parent"
@@ -539,11 +446,12 @@ export default function LandingPage() {
                   )}
                 </div>
                 <p className="text-xs text-[#6B7684] leading-relaxed">
-                  Post a tutoring request, browse verified teacher profiles, and book lessons with 100% escrow protection.
+                  Search nearby tutors by map location, browse verified educator profiles, and post tutoring job requests.
                 </p>
                 <div className="pt-2 flex items-center gap-2 text-xs font-bold text-[#3B7DD8]">
-                  <span>Browse Tutors or Post Request</span>
-                  <i className="ti ti-arrow-right text-xs" />
+                  <span onClick={(e) => { e.stopPropagation(); navigate("/miniapp"); }}>
+                    Open Map & Tutors in Mini App →
+                  </span>
                 </div>
               </div>
             </div>
@@ -552,7 +460,6 @@ export default function LandingPage() {
             <div
               onClick={() => {
                 setActivePortal("tutor");
-                setTutorSubTab("jobs");
               }}
               className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-start gap-4 shadow-sm ${
                 activePortal === "tutor"
@@ -573,17 +480,18 @@ export default function LandingPage() {
                   )}
                 </div>
                 <p className="text-xs text-[#6B7684] leading-relaxed">
-                  Browse open tutoring jobs with clear hourly ETB rates, apply with 1 click, and receive student matches on Telegram.
+                  Register with 5-step map onboarding, browse open student job requests, and earn referral commissions.
                 </p>
                 <div className="pt-2 flex items-center gap-2 text-xs font-bold text-[#E8703A]">
-                  <span>View Open Jobs & Apply</span>
-                  <i className="ti ti-arrow-right text-xs" />
+                  <span onClick={(e) => { e.stopPropagation(); navigate("/miniapp/register"); }}>
+                    Start Tutor Registration →
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Live Metrics Counter Bar */}
+          {/* Metrics Counter Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto pt-2">
             <div className="bg-white p-4 rounded-2xl border border-[#E8E1D3] text-center shadow-2xs">
               <div className="font-extrabold text-xl sm:text-2xl text-[#3B7DD8]">{stats.totalTutors}+</div>
@@ -599,64 +507,143 @@ export default function LandingPage() {
             </div>
             <div className="bg-white p-4 rounded-2xl border border-[#E8E1D3] text-center shadow-2xs">
               <div className="font-extrabold text-xl sm:text-2xl text-[#D4A017]">100%</div>
-              <div className="text-xs text-[#6B7684] font-medium mt-0.5">Escrow Safe Payments</div>
+              <div className="text-xs text-[#6B7684] font-medium mt-0.5">Verified Matching</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ──────── 3. SEARCH & SUBJECT FILTER BAR ──────── */}
+      {/* ──────── 3. NORMAL SEARCH & FILTER SUITE (LOCATION + SUBJECT + MINIMIZED MAP) ──────── */}
       <section className="bg-white border-b border-[#E8E1D3] py-4 px-4 sm:px-6 lg:px-8 shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Search Input Box */}
-          <div className="relative w-full md:w-96">
-            <i className="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7684] text-base" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={
-                activePortal === "parent"
-                  ? "Search tutor by name, subject, or location..."
-                  : "Search jobs by subject, grade level, location..."
-              }
-              className="w-full pl-10 pr-8 py-2.5 bg-[#FBF8F2] border border-[#E8E1D3] rounded-xl text-xs text-[#22364A] font-medium focus:outline-none focus:border-[#3B7DD8]"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7684] hover:text-[#22364A]"
+        <div className="max-w-7xl mx-auto space-y-3">
+          {/* Top Search Controls Bar */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            {/* 1. Keyword search input */}
+            <div className="relative flex-1">
+              <i className="ti ti-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7684] text-base" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={
+                  activePortal === "parent"
+                    ? "Search tutor by name, subject, or location..."
+                    : "Search jobs by subject, grade level, location..."
+                }
+                className="w-full pl-10 pr-8 py-2.5 bg-[#FBF8F2] border border-[#E8E1D3] rounded-xl text-xs text-[#22364A] font-medium focus:outline-none focus:border-[#3B7DD8]"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7684] hover:text-[#22364A]"
+                >
+                  <i className="ti ti-x text-xs" />
+                </button>
+              )}
+            </div>
+
+            {/* 2. Normal Location Selector Dropdown */}
+            <div className="relative w-full sm:w-56 flex-shrink-0">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#E8703A] text-sm pointer-events-none">
+                <i className="ti ti-map-pin" />
+              </div>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="w-full pl-8 pr-8 py-2.5 bg-[#FBF8F2] border border-[#E8E1D3] rounded-xl text-xs text-[#22364A] font-semibold appearance-none focus:outline-none focus:border-[#3B7DD8]"
               >
-                <i className="ti ti-x text-xs" />
-              </button>
-            )}
+                <option value="All">All Locations (Ethiopia)</option>
+                {POPULAR_LOCATIONS.filter((l) => l !== "All").map((loc) => (
+                  <option key={loc} value={loc}>
+                    📍 {loc}
+                  </option>
+                ))}
+              </select>
+              <i className="ti ti-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7684] text-xs pointer-events-none" />
+            </div>
+
+            {/* 3. Minimized Map View Toggle Button */}
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-2xs flex-shrink-0 ${
+                showMap
+                  ? "bg-[#3B7DD8] text-white border-[#3B7DD8]"
+                  : "bg-[#FBF8F2] text-[#22364A] border-[#E8E1D3] hover:border-[#3B7DD8]"
+              }`}
+            >
+              <i className={showMap ? "ti ti-map-off text-sm" : "ti ti-map-2 text-sm"} />
+              <span>{showMap ? "Minimize Map" : "🗺️ Show Map View"}</span>
+            </button>
           </div>
 
-          {/* Subject Pills Row */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-            {subjectsFilterList.map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setSelectedSubject(sub)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
-                  selectedSubject === sub
-                    ? "bg-[#3B7DD8] text-white border-[#3B7DD8] shadow-xs"
-                    : "bg-[#FBF8F2] text-[#22364A] border-[#E8E1D3] hover:border-[#3B7DD8]"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
+          {/* Quick Subject & Location Filter Chips */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-[#E8E1D3]/50">
+            {/* Subject Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full pb-1 scrollbar-none">
+              <span className="text-[10px] font-bold uppercase text-[#6B7684] flex-shrink-0 mr-1">
+                Subject:
+              </span>
+              {subjectsFilterList.map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setSelectedSubject(sub)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all border ${
+                    selectedSubject === sub
+                      ? "bg-[#3B7DD8] text-white border-[#3B7DD8] shadow-xs"
+                      : "bg-[#FBF8F2] text-[#22364A] border-[#E8E1D3] hover:border-[#3B7DD8]"
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ──────── 4. MAIN CONTENT WORKSPACE (PARENT PORTAL vs TUTOR PORTAL) ──────── */}
+      {/* ──────── COLLAPSIBLE MINIMIZED MAP CONTAINER ──────── */}
+      <AnimatePresence>
+        {showMap && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 overflow-hidden"
+          >
+            <div className="bg-white rounded-3xl border border-[#E8E1D3] shadow-lg overflow-hidden">
+              <div className="p-3 bg-[#1B3A5C] text-white flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  <i className="ti ti-map-pin text-[#E8703A] text-sm" />
+                  <span>Geospatial Tutor Map: Radius Search across Addis Ababa & Ethiopia</span>
+                </div>
+                <button
+                  onClick={() => setShowMap(false)}
+                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                >
+                  <i className="ti ti-x text-xs" />
+                  <span>Minimize Map</span>
+                </button>
+              </div>
+              <div className="h-80 sm:h-96 w-full">
+                <NearbyTutorsMap
+                  tutors={filteredTutors}
+                  radiusKm={15}
+                  userLocationName="Addis Ababa, Ethiopia"
+                  onSelectTutor={(t) => {
+                    navigate("/miniapp");
+                  }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ──────── 4. MAIN CONTENT WORKSPACE ──────── */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         {/* ════════════ PORTAL A: PARENTS & STUDENTS ════════════ */}
         {activePortal === "parent" && (
           <div className="space-y-6">
-            {/* Sub Tabs & Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-[#22364A] tracking-tight">
@@ -669,18 +656,33 @@ export default function LandingPage() {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setShowMap(!showMap)}
+                  className="px-4 py-2 bg-[#E9F1FC] text-[#3B7DD8] hover:bg-[#3B7DD8] hover:text-white text-xs font-bold rounded-xl shadow-2xs border border-[#3B7DD8]/30 flex items-center gap-1.5 transition-all"
+                >
+                  <i className={showMap ? "ti ti-map-off text-sm" : "ti ti-map-2 text-sm"} />
+                  <span>{showMap ? "Hide Map" : "Interactive Map View"}</span>
+                </button>
+                <button
                   onClick={() => setShowPostJobModal(true)}
                   className="px-4 py-2 bg-[#4E9450] hover:bg-[#3D783F] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
                 >
                   <i className="ti ti-file-plus text-sm" />
-                  <span>Can't find a tutor? Post a Request</span>
+                  <span>Post a Request</span>
                 </button>
               </div>
             </div>
 
-            {/* Tutors Grid (1 col mobile, 2 col tablet, 3 col desktop) */}
+            {/* Tutors Grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredTutors.map((tutor) => (
+              {tutorsLoading ? (
+                Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+              ) : filteredTutors.length === 0 ? (
+                <div className="col-span-3 text-center py-16 text-[#6B7684]">
+                  <i className="ti ti-user-off text-4xl mb-3 block text-[#E8E1D3]" />
+                  <p className="font-semibold text-sm">No tutors registered yet.</p>
+                  <p className="text-xs mt-1">Be the first — <button className="text-[#E8703A] underline" onClick={() => navigate("/miniapp/register")}>Register as a tutor</button></p>
+                </div>
+              ) : filteredTutors.map((tutor) => (
                 <div
                   key={tutor.id}
                   className="bg-white rounded-3xl p-6 border border-[#E8E1D3] shadow-sm hover:shadow-md hover:border-[#3B7DD8] transition-all flex flex-col justify-between"
@@ -764,10 +766,11 @@ export default function LandingPage() {
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setSelectedTutorForBooking(tutor)}
-                        className="px-4 py-2 bg-[#E8703A] hover:bg-[#D6602A] text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
+                        onClick={() => navigate("/miniapp")}
+                        className="px-4 py-2 bg-[#E8703A] hover:bg-[#D6602A] text-white text-xs font-bold rounded-xl transition-colors shadow-xs flex items-center gap-1"
                       >
-                        Book Lesson
+                        <i className="ti ti-calendar text-xs" />
+                        <span>Book Session</span>
                       </button>
                     </div>
                   </div>
@@ -780,7 +783,6 @@ export default function LandingPage() {
         {/* ════════════ PORTAL B: TUTORS & TEACHING OPPORTUNITIES ════════════ */}
         {activePortal === "tutor" && (
           <div className="space-y-6">
-            {/* Header & Sub-tab controls */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-[#22364A] tracking-tight">
@@ -793,6 +795,13 @@ export default function LandingPage() {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => navigate("/miniapp/register")}
+                  className="px-4 py-2 bg-[#E8703A] hover:bg-[#D6602A] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <i className="ti ti-user-plus text-sm" />
+                  <span>Register as Tutor</span>
+                </button>
+                <button
                   onClick={() => navigate("/miniapp")}
                   className="px-4 py-2 bg-[#3B7DD8] hover:bg-[#2D6BBB] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
                 >
@@ -804,7 +813,15 @@ export default function LandingPage() {
 
             {/* Jobs Listing Cards */}
             <div className="grid md:grid-cols-2 gap-4">
-              {filteredJobs.map((job) => (
+              {jobsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} lines={3} />)
+              ) : filteredJobs.length === 0 ? (
+                <div className="col-span-2 text-center py-16 text-[#6B7684]">
+                  <i className="ti ti-briefcase-off text-4xl mb-3 block text-[#E8E1D3]" />
+                  <p className="font-semibold text-sm">No open job requests yet.</p>
+                  <p className="text-xs mt-1">Parents can <button className="text-[#3B7DD8] underline" onClick={() => setShowPostJobModal(true)}>post a request</button> and tutors will apply.</p>
+                </div>
+              ) : filteredJobs.map((job) => (
                 <div
                   key={job.id}
                   className="bg-white rounded-3xl p-6 border border-[#E8E1D3] shadow-sm hover:shadow-md hover:border-[#E8703A] transition-all flex flex-col justify-between space-y-4"
@@ -857,45 +874,69 @@ export default function LandingPage() {
                     </div>
 
                     <button
-                      onClick={() => handleApplyForJob(job)}
-                      className="px-4 py-2 bg-[#E8703A] hover:bg-[#D6602A] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
+                      onClick={() => handleApplyClick(job)}
+                      disabled={appliedJobIds.includes(job.id)}
+                      className={`px-4 py-2 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 ${
+                        appliedJobIds.includes(job.id)
+                          ? "bg-[#4E9450] cursor-default"
+                          : "bg-[#E8703A] hover:bg-[#D6602A]"
+                      }`}
                     >
-                      <i className="ti ti-send text-xs" />
-                      <span>Apply for Job</span>
+                      <i className={appliedJobIds.includes(job.id) ? "ti ti-check text-xs" : "ti ti-send text-xs"} />
+                      <span>{appliedJobIds.includes(job.id) ? "Applied" : "Apply Now"}</span>
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Tutor Benefits / Referral Program Banner */}
+            {/* Tutor Benefits & Referral Program Banner */}
             <div className="bg-gradient-to-r from-[#1B3A5C] to-[#22364A] text-white rounded-3xl p-6 sm:p-8 shadow-md grid md:grid-cols-3 gap-6 items-center">
               <div className="space-y-1 md:col-span-2">
                 <span className="text-xs font-bold text-[#E8703A] uppercase tracking-wider">
-                  Tutor Referral Program
+                  Tutor Registration & Referral Program
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-white">
-                  Earn Referral Bonuses for Every Tutor You Invite
+                  Join Abugida as a Verified Tutor & Earn Referral Bonuses
                 </h3>
                 <p className="text-xs text-white/70 leading-relaxed max-w-xl">
-                  Share your unique referral link from your Telegram bot. When tutors get verified and teach their first student, you receive instant commission in your balance.
+                  Manage everything right in your browser or on Telegram. Set your hourly ETB rate, subjects, availability, and receive student matches instantly.
                 </p>
               </div>
 
               <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => navigate("/miniapp")}
-                  className="px-5 py-3 bg-[#E8703A] hover:bg-[#D6602A] text-white rounded-xl text-xs font-extrabold transition-all text-center shadow-sm"
-                >
-                  Get My Referral Code
-                </button>
+                {currentUser ? (
+                  <button
+                    onClick={() => navigate("/miniapp/dashboard")}
+                    className="px-5 py-3 bg-[#3B7DD8] hover:bg-[#2D6BBB] text-white rounded-xl text-xs font-extrabold transition-all text-center shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <i className="ti ti-layout-dashboard text-sm" />
+                    <span>Open Tutor Dashboard</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setShowTelegramLogin(true)}
+                      className="px-5 py-3 bg-[#E8703A] hover:bg-[#D6602A] text-white rounded-xl text-xs font-extrabold transition-all text-center shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      <i className="ti ti-brand-telegram text-sm" />
+                      <span>Log in with Telegram</span>
+                    </button>
+                    <button
+                      onClick={() => navigate("/miniapp/register")}
+                      className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all text-center"
+                    >
+                      Register as New Tutor
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* ──────── 5. MODAL: PARENT POST TUTORING REQUEST ──────── */}
+      {/* ──────── 5. MODAL: REAL PARENT POST TUTORING REQUEST ──────── */}
       <AnimatePresence>
         {showPostJobModal && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
@@ -910,7 +951,7 @@ export default function LandingPage() {
                 <div>
                   <h3 className="font-extrabold text-base">Request a Tutor / Post a Job</h3>
                   <p className="text-xs text-white/80">
-                    We will match you with top verified tutors within hours.
+                    Your request will be vetted by admins and broadcasted to verified tutors.
                   </p>
                 </div>
                 <button
@@ -1053,104 +1094,7 @@ export default function LandingPage() {
         )}
       </AnimatePresence>
 
-      {/* ──────── 6. MODAL: DIRECT TUTOR BOOKING ──────── */}
-      <AnimatePresence>
-        {selectedTutorForBooking && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white w-full max-w-md rounded-3xl border border-[#E8E1D3] shadow-2xl overflow-hidden my-8"
-            >
-              <div className="bg-[#3B7DD8] text-white p-4 flex items-center justify-between">
-                <span className="font-extrabold text-sm">Book Session with {selectedTutorForBooking.name}</span>
-                <button
-                  onClick={() => setSelectedTutorForBooking(null)}
-                  className="text-white hover:opacity-80 p-1"
-                >
-                  <i className="ti ti-x text-base" />
-                </button>
-              </div>
-
-              <div className="p-5 space-y-4 text-xs">
-                <div className="flex items-center gap-3 pb-3 border-b border-[#E8E1D3]">
-                  <div
-                    className="w-12 h-12 rounded-2xl text-white font-bold text-base flex items-center justify-center shadow-xs"
-                    style={{ backgroundColor: selectedTutorForBooking.avatarBg }}
-                  >
-                    {selectedTutorForBooking.initials}
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-[#22364A]">{selectedTutorForBooking.name}</h4>
-                    <p className="text-[#6B7684]">{selectedTutorForBooking.subjects}</p>
-                    <div className="font-bold text-[#3B7DD8] mt-0.5">{selectedTutorForBooking.rate} ETB/hr</div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-bold text-[#22364A] block mb-1.5">Pick Session Day</label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {["Wed 13", "Thu 14", "Fri 15", "Sat 16", "Sun 17", "Mon 18"].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        className="py-1.5 px-2 rounded-xl border border-[#E8E1D3] bg-[#FBF8F2] hover:border-[#3B7DD8] font-semibold text-center text-xs"
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-bold text-[#22364A] block mb-1.5">Pick Time Slot</label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {["9:00 AM", "2:00 PM", "4:30 PM", "6:00 PM", "7:30 PM", "8:30 PM"].map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className="py-1.5 px-2 rounded-xl border border-[#E8E1D3] bg-[#FBF8F2] hover:border-[#3B7DD8] font-semibold text-center text-xs"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-[#FBF8F2] p-3.5 rounded-2xl border border-[#E8E1D3] space-y-1">
-                  <div className="flex justify-between text-[#6B7684]">
-                    <span>Session (1 hour)</span>
-                    <span>{selectedTutorForBooking.rate} ETB</span>
-                  </div>
-                  <div className="flex justify-between text-[#6B7684]">
-                    <span>Escrow Service Fee</span>
-                    <span>15 ETB</span>
-                  </div>
-                  <div className="flex justify-between font-extrabold text-[#22364A] pt-1 border-t border-[#E8E1D3] text-sm">
-                    <span>Total Due</span>
-                    <span>{selectedTutorForBooking.rate + 15} ETB</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    toast.success("Booking request sent! Complete payment via Telegram Pay or Mobile Money.");
-                    setSelectedTutorForBooking(null);
-                  }}
-                  className="w-full py-3 bg-[#E8703A] hover:bg-[#D6602A] text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
-                >
-                  <i className="ti ti-lock text-sm" />
-                  <span>Confirm & Pay {selectedTutorForBooking.rate + 15} ETB</span>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ──────── 7. FOOTER ──────── */}
+      {/* ──────── 6. FOOTER ──────── */}
       <footer className="bg-[#1B3A5C] text-white/80 py-12 px-4 sm:px-6 lg:px-8 border-t border-white/10 mt-auto">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
           <div className="col-span-2 md:col-span-1 space-y-3">
@@ -1161,7 +1105,7 @@ export default function LandingPage() {
               <span className="font-extrabold text-white text-base">Abugida Platform</span>
             </div>
             <p className="text-white/60 leading-relaxed">
-              Ethiopia's trusted tutor network. Empowering students, parents, and teachers with safe escrow payments and verified teacher credentials.
+              Ethiopia's trusted tutor network. Empowering students, parents, and teachers with safe matching and verified teacher credentials.
             </p>
           </div>
 
@@ -1184,13 +1128,13 @@ export default function LandingPage() {
             </h4>
             <ul className="space-y-2 text-white/70">
               <li className="cursor-pointer hover:text-white" onClick={() => navigate("/miniapp")}>
-                Telegram Mini App
+                Tutor Platform (Web App)
+              </li>
+              <li className="cursor-pointer hover:text-white" onClick={() => navigate("/miniapp/register")}>
+                Tutor Registration (5-Step Map)
               </li>
               <li className="cursor-pointer hover:text-white" onClick={() => setShowPostJobModal(true)}>
                 Post a Tutoring Request
-              </li>
-              <li className="cursor-pointer hover:text-white" onClick={() => setActivePortal("tutor")}>
-                Browse Tutoring Jobs
               </li>
               <li className="cursor-pointer hover:text-white" onClick={() => navigate("/login")}>
                 Staff & Admin Portal
@@ -1209,8 +1153,8 @@ export default function LandingPage() {
               onClick={() => navigate("/miniapp")}
               className="px-4 py-2.5 bg-[#E8703A] hover:bg-[#D6602A] text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-xs"
             >
-              <i className="ti ti-brand-telegram text-base" />
-              <span>Launch @AbugidaTutorBot</span>
+              <i className="ti ti-school text-base" />
+              <span>Launch Tutor Platform</span>
             </button>
           </div>
         </div>
@@ -1220,6 +1164,28 @@ export default function LandingPage() {
           <span>Bole, Addis Ababa, Ethiopia • Telebirr & CBE Birr Supported</span>
         </div>
       </footer>
+
+      {/* ──────── 7. BROWSER TELEGRAM AUTH & APPLICATION MODALS ──────── */}
+      <TelegramLoginModal
+        isOpen={showTelegramLogin}
+        onClose={() => setShowTelegramLogin(false)}
+        onSuccess={handleTelegramLoginSuccess}
+        title="Log in with Telegram"
+      />
+
+      <BrowserJobApplyModal
+        isOpen={showApplyModal}
+        onClose={() => {
+          setShowApplyModal(false);
+          setSelectedJobToApply(null);
+        }}
+        job={selectedJobToApply}
+        tutor={currentUser}
+        onApplied={(jobId) => {
+          setAppliedJobIds((prev) => [...prev, jobId]);
+          refetchJobs();
+        }}
+      />
     </div>
   );
 }

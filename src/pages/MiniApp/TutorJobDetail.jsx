@@ -56,9 +56,13 @@ const TutorJobDetail = () => {
       setStatus("error");
       const errData = err?.data?.error || err?.data;
       if (typeof errData === "object") {
-        if (errData.reason === "insufficient_invites") {
+        if (errData.reason === "profile_incomplete") {
           setErrorMsg(
-            `You need ${errData.required_threshold} invites to apply. You currently have ${errData.current_balance}.`
+            "⚠️ Your tutor profile is incomplete. Please complete your registration via our Telegram bot before applying."
+          );
+        } else if (errData.reason === "insufficient_invites") {
+          setErrorMsg(
+            `You need ${errData.required_threshold} group invites to apply. You currently have ${errData.current_balance}.`
           );
         } else if (errData.reason === "previously_rejected") {
           setErrorMsg("Your previous application for this job was rejected by an admin.");

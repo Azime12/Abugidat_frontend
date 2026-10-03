@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { FaUser, FaLock, FaPhone } from "react-icons/fa";
@@ -15,12 +15,15 @@ import AuthLayout from "../shared/auth/AuthLayout";
 import FormField from "../shared/auth/FormField";
 import PasswordField from "../shared/auth/PasswordField";
 import SubmitButton from "../shared/auth/SubmitButton";
+import TelegramLoginModal from "../shared/TelegramLoginModal";
+import TelegramLoginButton from "../shared/TelegramLoginButton";
 
 const SmartSignUp = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [signup, { isLoading }] = useSignupMutation();
   const currentUser = useSelector(selectUser);
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
