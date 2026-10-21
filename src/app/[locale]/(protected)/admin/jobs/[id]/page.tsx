@@ -326,9 +326,18 @@ export default function JobDetailPage({ params }: PageProps) {
                 Applicants ({applications.length})
               </h2>
             </div>
-            <span className="text-xs text-gray-400">
-              Verified tutor applications
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Verified tutor applications</span>
+              {applications.length > 0 && (
+                <Link
+                  href={`/admin/jobs/${job.id}/applicants`}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0096D6] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#007FB8] transition"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  View All ({applications.length})
+                </Link>
+              )}
+            </div>
           </div>
 
           {applications.length === 0 ? (
