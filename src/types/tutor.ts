@@ -95,6 +95,7 @@ export interface TutorRegisterTeachingDetails {
   onlineOk: boolean;
   cvFile?: string; // Base64 data URL or file URL
   educationFile?: string; // Base64 or certificate URL
+  curriculumId?: string; // "et-national" | "igcse" | "ib" | "american" | "skill"
 }
 
 export interface TutorRegistration extends TutorRegisterBasicInfo, TutorRegisterTeachingDetails {}

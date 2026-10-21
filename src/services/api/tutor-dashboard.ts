@@ -25,6 +25,8 @@ export const tutorDashboardService = {
   refunds: () => client.get("/kulf/refunds"),
   // Parent requests (open + unlock)
   openRequests: () => client.get("/requests/open"),
+  // Tutor: requests they have unlocked (refund-eligible)
+  myUnlockedRequests: () => client.get("/requests/my-unlocks"),
   unlockRequest: (requestId: string) => client.post(`/requests/${requestId}/unlock`),
 };
 

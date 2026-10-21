@@ -1,6 +1,6 @@
 import React from "react";
 
-export type StatusVariant =
+export type KnownStatus =
   | "ACTIVE"
   | "INACTIVE"
   | "PENDING"
@@ -12,8 +12,11 @@ export type StatusVariant =
   | "PRIVATE"
   | "CREATE"
   | "UPDATE"
-  | "DELETE"
-  | string;
+  | "DELETE";
+
+/** Known statuses get autocomplete; arbitrary strings still allowed at the
+ *  boundary (the styles map falls back to a neutral grey). */
+export type StatusVariant = KnownStatus | (string & {});
 
 const variantStyles: Record<string, string> = {
   ACTIVE: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",

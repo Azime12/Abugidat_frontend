@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parentRequestService } from "@/services/api/parent-requests";
 import { Link, useRouter } from "@/i18n/routing";
@@ -12,12 +12,8 @@ import {
 import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/api-errors";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useCurriculum } from "@/hooks/useCurriculum";
 
-const GRADES = ["KG", "1-4", "5-8", "9-10", "11-12", "Uni"];
-const SUBJECTS = [
-  "Mathematics", "Physics", "Chemistry", "Biology", "English",
-  "Amharic", "Science", "History", "Geography", "Coding",
-];
 const AREAS = [
   "Bole", "Kirkos", "Yeka", "Arada", "Gulele", "Lideta",
   "Akaki Kaliti", "Nifas Silk-Lafto", "Kolfe Keranio", "Addis Ketema",
@@ -29,10 +25,23 @@ export default function NewParentRequestPage() {
   const { user } = useAuth();
   const u = user as any;
 
+  // Curriculum v2 — live grade & subject lists from /api/public/curriculum
+  const { data: curriculumConfig } = useCurriculum();
+  const ethiopian = curriculumConfig?.curriculums.find((c) => c.id === "et-national");
+  const liveGrades = ethiopian?.grades ?? [];
+  const liveSubjects = ethiopian?.subjectsByGrade ?? {};
+
+  // Pick a sensible default grade once the live list arrives
+  useEffect(() => {
+    if (liveGrades.length > 0 && !liveGrades.some((g) => g.label === form.grade_level)) {
+      setForm((prev) => ({ ...prev, grade_level: liveGrades[0].label }));
+    }
+  }, [liveGrades]);
+
   const [form, setForm] = useState({
     parent_name: u?.firstName || u?.first_name || "",
     parent_phone: u?.phone || u?.phone_number || "",
-    grade_level: "5-8",
+    grade_level: "",   // set from live curriculum on load (see effect below)
     subjects: "Mathematics",
     area_name: "Bole",
     preferred_time: "",
@@ -168,9 +177,9 @@ export default function NewParentRequestPage() {
                   onChange={(e) => setForm({ ...form, grade_level: e.target.value })}
                   className="input-base appearance-none cursor-pointer"
                 >
-                  {GRADES.map((g) => (
-                    <option key={g} value={g}>
-                      {g === "Uni" ? "University" : `Grade ${g}`}
+                  {liveGrades.map((g) => (
+                    <option key={g.id} value={g.label}>
+                      {g.label}
                     </option>
                   ))}
                 </select>
@@ -182,7 +191,7 @@ export default function NewParentRequestPage() {
                   onChange={(e) => setForm({ ...form, subjects: e.target.value })}
                   className="input-base appearance-none cursor-pointer"
                 >
-                  {SUBJECTS.map((s) => (
+                  {(liveSubjects[form.grade_level] ?? []).map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>

@@ -56,6 +56,7 @@ export const tutorRegisterService = {
       education: data.education || null,
       subjects: data.subjects.join(", "),
       grade_levels: data.gradeLevels.join(", "),
+      curriculum: data.curriculumId || "et-national",
       city: data.areaName || "Addis Ababa",
       latitude: data.latitude ?? null,
       longitude: data.longitude ?? null,

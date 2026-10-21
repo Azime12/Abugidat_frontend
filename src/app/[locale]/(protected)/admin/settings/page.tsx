@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/api/admin";
 import { toast } from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/api-errors";
-import { Loader2, Save, Wallet, Banknote, Users, Link as LinkIcon, Briefcase, Send, Languages, Navigation } from "lucide-react";
+import { Loader2, Save, Wallet, Banknote, Users, Link as LinkIcon, Briefcase, Send, Languages, Navigation, BookOpen } from "lucide-react";
+import { CurriculumEditor } from "@/components/admin/CurriculumEditor";
 
 interface ConfigForm {
   kulf10: number;
@@ -357,6 +358,14 @@ export default function AdminSettingsPage() {
             </span>
           </label>
         </div>
+      </Section>
+
+      <Section
+        title="Curriculums & Grades"
+        description="Manage categories, curriculums, grades, and subjects across the platform."
+        icon={<BookOpen size={18} />}
+      >
+        <CurriculumEditor />
       </Section>
 
       <button

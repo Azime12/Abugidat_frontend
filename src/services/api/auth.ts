@@ -10,7 +10,6 @@
 
 import client from "@/lib/api-client";
 import type {
-  AuthResponse,
   LoginCredentials,
   SignupData,
   User,
