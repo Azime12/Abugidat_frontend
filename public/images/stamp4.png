@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+  <!-- Outer Distressed Rubber Circles -->
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#C8102E" stroke-width="8" stroke-dasharray="190 4 8 2" opacity="0.9"/>
+  <circle cx="250" cy="250" r="218" fill="none" stroke="#C8102E" stroke-width="3" opacity="0.85"/>
+  <circle cx="250" cy="250" r="145" fill="none" stroke="#C8102E" stroke-width="3" opacity="0.85"/>
+
+  <!-- Arc Paths -->
+  <defs>
+    <path id="arcTop" d="M 60,250 A 190,190 0 1,1 440,250" fill="none"/>
+    <path id="arcBottom" d="M 440,250 A 190,190 0 0,1 60,250" fill="none"/>
+  </defs>
+
+  <!-- Top Text (Amharic) -->
+  <text font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#C8102E" opacity="0.9">
+    <textPath href="#arcTop" startOffset="50%" text-anchor="middle">
+      የአዲስ አበባ ከተማ አስተዳደር ፕላንና ልማት ቢሮ
+    </textPath>
+  </text>
+
+  <!-- Bottom Text (English) -->
+  <text font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="bold" fill="#C8102E" opacity="0.9">
+    <textPath href="#arcBottom" startOffset="50%" text-anchor="middle">
+      ADDIS ABABA PLAN &amp; DEVELOPMENT BUREAU
+    </textPath>
+  </text>
+
+  <!-- Side Stars -->
+  <text x="62" y="258" font-size="26" fill="#C8102E" text-anchor="middle" opacity="0.9">★</text>
+  <text x="438" y="258" font-size="26" fill="#C8102E" text-anchor="middle" opacity="0.9">★</text>
+
+  <!-- Center Content -->
+  <text x="250" y="210" font-family="sans-serif" font-weight="bold" font-size="22" fill="#C8102E" text-anchor="middle" opacity="0.95">
+    ተቀብለናል / RECEIVED
+  </text>
+
+  <line x1="140" y1="225" x2="360" y2="225" stroke="#C8102E" stroke-width="2" opacity="0.85"/>
+
+  <text x="250" y="255" font-family="sans-serif" font-size="16" font-weight="bold" fill="#C8102E" text-anchor="middle" opacity="0.9">
+    ቀን / DATE: ________________
+  </text>
+  <text x="250" y="290" font-family="sans-serif" font-size="16" font-weight="bold" fill="#C8102E" text-anchor="middle" opacity="0.9">
+    ፊርማ / SIGN: _______________
+  </text>
+</svg>

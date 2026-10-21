@@ -1,0 +1,22 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/ag2qrcvg/plan.ag2qr.com"
+PassengerBaseURI "/"
+PassengerNodejs "/home/ag2qrcvg/nodevenv/plan.ag2qr.com/22/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+PassengerMinInstances 1
+PassengerMaxInstances 2
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 1. Bypass .well-known for AutoSSL / Let's Encrypt DCV validation
+  RewriteCond %{REQUEST_URI} ^/\.well-known [NC]
+  RewriteRule ^ - [L]
+
+  # 2. Redirect HTTP to HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>

@@ -1,0 +1,552 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ═══════════════════════════════════════════════════════
+   Utility: Hide AM/PM in native time inputs (24h display)
+   ═══════════════════════════════════════════════════════ */
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  display: none !important;
+}
+input[type="time"] {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Abugida Tutor Theme — Light Mode
+   ═══════════════════════════════════════════════════════ */
+:root {
+  /* Base */
+  --background: #FFF8F0;
+  --foreground: #2D2A32;
+  --card: #ffffff;
+  --card-foreground: #2D2A32;
+  --popover: #ffffff;
+  --popover-foreground: #2D2A32;
+
+  /* Abugida Tutor Brand */
+  --brand-primary: #0096D6;        /* Sky blue */
+  --brand-primary-hover: #007FB8;  /* Darker blue */
+  --brand-secondary: #006A9B;      /* Deep blue */
+  --brand-accent: #F59E0B;         /* Kulf gold */
+  --brand-main: #2D2A32;           /* Ink */
+  --brand-muted: #6B7280;          /* Gray 500 */
+  --brand-clean: #E5E7EB;          /* Borders */
+  --brand-bg: #E8F4F8;             /* Light blue tint */
+  --brand-cream: #FFF8F0;          /* Cream background */
+
+  /* State colors */
+  --state-success: #10B981;
+  --state-pending: #F59E0B;
+  --state-danger: #EF4444;
+  --state-info: #3B82F6;
+
+  /* shadcn semantic mapping */
+  --primary: #0096D6;
+  --primary-foreground: #ffffff;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #2D2A32;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #E8F4F8;
+  --accent-foreground: #006A9B;
+  --destructive: #EF4444;
+  --destructive-foreground: #ffffff;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #0096D6;
+  --radius: 0.625rem;
+
+  /* Charts */
+  --chart-1: #0096D6;
+  --chart-2: #F59E0B;
+  --chart-3: #10B981;
+  --chart-4: #8B5CF6;
+  --chart-5: #EF4444;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Dark Mode
+   ═══════════════════════════════════════════════════════ */
+.dark {
+  --background: #1a1a1f;
+  --foreground: #F9F9F9;
+  --card: #242429;
+  --card-foreground: #F9F9F9;
+  --popover: #242429;
+  --popover-foreground: #F9F9F9;
+
+  --brand-primary: #22b3e8;
+  --brand-primary-hover: #0096D6;
+  --brand-secondary: #0096D6;
+  --brand-accent: #FBBF24;
+  --brand-main: #F9F9F9;
+  --brand-muted: #9CA3AF;
+  --brand-clean: #374151;
+  --brand-bg: #1e293b;
+  --brand-cream: #1a1a1f;
+
+  --primary: #22b3e8;
+  --primary-foreground: #0f172a;
+  --secondary: #374151;
+  --secondary-foreground: #F9F9F9;
+  --muted: #374151;
+  --muted-foreground: #9CA3AF;
+  --accent: #1e3a52;
+  --accent-foreground: #7dd3fc;
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #22b3e8;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Tailwind v4 Theme
+   ═══════════════════════════════════════════════════════ */
+@theme inline {
+  /* Brand colors → utilities */
+  --color-brand: var(--brand-primary);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-main: var(--brand-main);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-clean: var(--brand-clean);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-cream: var(--brand-cream);
+
+  /* State colors */
+  --color-state-success: var(--state-success);
+  --color-state-pending: var(--state-pending);
+  --color-state-danger: var(--state-danger);
+  --color-state-info: var(--state-info);
+
+  /* Semantic (shadcn) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Fonts (set via CSS variables from next/font) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-ethiopic: var(--font-ethiopic), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+
+  /* Radii */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ═══════════════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+  }
+  /* Amharic locale uses Ethiopic font */
+  html[lang="am"] body {
+    font-family: var(--font-ethiopic), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    font-size: 0.875rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Custom Scrollbar
+   ═══════════════════════════════════════════════════════ */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.2);
+  border-radius: 20px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.4);
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Print styles
+   ═══════════════════════════════════════════════════════ */
+@media print {
+  header, nav, aside, footer, [data-sidebar], [data-header] {
+    display: none !important;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   §4.13 Modern Interactive Tutor Map Markers & Badges
+   ═══════════════════════════════════════════════════════ */
+.tutor-pin-wrapper,
+.tutor-marker-container {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ── Compact Tutor Icon Pin (Sleek 36px map pin) ── */
+.tutor-icon-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s ease;
+}
+
+.tutor-icon-pin:hover {
+  transform: translateY(-4px) scale(1.15);
+  z-index: 99999 !important;
+}
+
+.tutor-icon-pin.selected {
+  transform: translateY(-6px) scale(1.2);
+  z-index: 100000 !important;
+}
+
+/* Round pin head */
+.tutor-pin-head {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0096D6 0%, #0077b3 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 150, 214, 0.45), 0 0 0 2.5px #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.tutor-icon-pin.featured .tutor-pin-head {
+  background: linear-gradient(135deg, #FFB800 0%, #E09000 100%);
+  box-shadow: 0 4px 12px rgba(255, 184, 0, 0.55), 0 0 0 2.5px #ffffff;
+}
+
+.tutor-icon-pin.selected .tutor-pin-head {
+  box-shadow: 0 6px 18px rgba(0, 150, 214, 0.65), 0 0 0 3px #0096D6;
+}
+
+/* Micro graduation cap badge */
+.tutor-pin-cap-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Pointer tail */
+.tutor-pin-tail {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #0077b3;
+  margin-top: -1px;
+}
+
+.tutor-icon-pin.featured .tutor-pin-tail {
+  border-top-color: #E09000;
+}
+
+.tutor-icon-pin.selected .tutor-pin-tail {
+  border-top-color: #0096D6;
+}
+
+/* Compact name chip below the pin */
+.tutor-pin-chip {
+  margin-top: 2px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.tutor-icon-pin.selected .tutor-pin-chip {
+  background: #0096D6;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* ── Compact Cluster Icon Pin (Multiple tutors) ── */
+.tutor-cluster-icon-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tutor-cluster-icon-pin:hover {
+  transform: translateY(-4px) scale(1.15);
+  z-index: 99999 !important;
+}
+
+.tutor-cluster-icon-pin.selected {
+  transform: translateY(-6px) scale(1.2);
+  z-index: 100000 !important;
+}
+
+.tutor-cluster-head {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.45), 0 0 0 2.5px #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tutor-cluster-icon-pin.featured .tutor-cluster-head {
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5), 0 0 0 2.5px #f59e0b;
+}
+
+.tutor-cluster-tail {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #1e293b;
+  margin-top: -1px;
+}
+
+.tutor-cluster-chip {
+  margin-top: 2px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+
+/* ── Compact Job Icon Pin (Green theme for jobs) ── */
+.job-icon-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.1s ease;
+}
+
+.job-icon-pin:hover {
+  transform: translateY(-4px) scale(1.15);
+  z-index: 99999 !important;
+}
+
+.job-icon-pin.selected {
+  transform: translateY(-6px) scale(1.2);
+  z-index: 100000 !important;
+}
+
+.job-pin-head {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.45), 0 0 0 2.5px #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.job-icon-pin.selected .job-pin-head {
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.65), 0 0 0 3px #10b981;
+}
+
+.job-pin-tail {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #047857;
+  margin-top: -1px;
+}
+
+.job-pin-chip {
+  margin-top: 2px;
+  background: #ffffff;
+  color: #065f46;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+/* ── Concentric User Location Beacon (§4.5 & User Centered) ── */
+.user-concentric-beacon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-beacon-core {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0096D6;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 150, 214, 0.6);
+  z-index: 2;
+}
+
+.user-beacon-ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 150, 214, 0.35);
+  animation: beacon-pulse 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  z-index: 1;
+}
+
+.user-beacon-ripple-outer {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 150, 214, 0.4);
+  animation: beacon-pulse 2s cubic-bezier(0, 0.2, 0.8, 1) infinite 0.7s;
+  z-index: 0;
+}
+
+@keyframes beacon-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ── Simple legacy fallback ── */
+.tutor-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0096D6 0%, #0077b3 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 150, 214, 0.45), 0 0 0 3px #ffffff;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tutor-pin:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(0, 150, 214, 0.6), 0 0 0 4px #ffffff;
+}
+
+.tutor-pin-featured {
+  background: linear-gradient(135deg, #FFB800 0%, #E09000 100%);
+  box-shadow: 0 4px 14px rgba(255, 184, 0, 0.55), 0 0 0 3px #ffffff;
+}
+
+.tutor-pin-featured:hover {
+  box-shadow: 0 6px 18px rgba(255, 184, 0, 0.7), 0 0 0 4px #ffffff;
+}
