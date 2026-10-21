@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 .next/
 out/
 build/
@@ -23,3 +23,9 @@ cpanel-deploy.*
 Thumbs.db
 .vscode/
 .idea/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Build artifacts
+*.tsbuildinfo
