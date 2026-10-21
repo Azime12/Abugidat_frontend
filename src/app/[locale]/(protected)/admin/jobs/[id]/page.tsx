@@ -326,23 +326,27 @@ export default function JobDetailPage({ params }: PageProps) {
                 Applicants ({applications.length})
               </h2>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Verified tutor applications</span>
-              {applications.length > 0 && (
-                <Link
-                  href={`/admin/jobs/${job.id}/applicants`}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0096D6] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#007FB8] transition"
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  View All ({applications.length})
-                </Link>
-              )}
-            </div>
+            <Link
+              href={`/admin/jobs/${job.id}/applicants`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0096D6] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#007FB8] transition shadow-sm"
+            >
+              <Users className="h-3.5 w-3.5" />
+              {applications.length === 0
+                ? "Open Applicants Page"
+                : `View All ${applications.length} Applicant${applications.length === 1 ? "" : "s"}`}
+            </Link>
           </div>
 
           {applications.length === 0 ? (
-            <div className="py-8 text-center text-xs text-gray-400">
-              No tutors have applied for this job yet.
+            <div className="py-8 text-center">
+              <Users className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-xs text-gray-400 mb-3">No tutors have applied for this job yet.</p>
+              <Link
+                href={`/admin/jobs/${job.id}/applicants`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50"
+              >
+                Open Applicants Page
+              </Link>
             </div>
           ) : (
             <div className="space-y-3">
