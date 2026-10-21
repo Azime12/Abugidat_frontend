@@ -15,7 +15,6 @@ const NAV = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/tutors", label: "Tutors", icon: GraduationCap },
   { href: "/admin/jobs", label: "Jobs & Requests", icon: Briefcase },
-  { href: "/admin/applications", label: "Applications", icon: FileText },
   { href: "/admin/matches", label: "Matches", icon: Handshake },
   { href: "/admin/agents", label: "Agents", icon: Building2 },
   { href: "/admin/waitlist", label: "Waitlist Demand", icon: Bell },

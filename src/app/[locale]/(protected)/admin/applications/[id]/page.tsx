@@ -106,10 +106,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
           The requested application #{id} could not be located or has been removed.
         </p>
         <Link
-          href="/admin/applications"
+          href={`/admin/jobs/${app.job_id}`}
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-800"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Applications
+          <ArrowLeft className="h-4 w-4" /> Back to Job
         </Link>
       </div>
     );
@@ -178,10 +178,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       {/* Top bar navigation */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link
-          href="/admin/applications"
+          href={`/admin/jobs/${app.job_id}`}
           className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-gray-900"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Applications List
+          <ArrowLeft className="h-4 w-4" /> Back to Job
         </Link>
 
         {/* Status indicator */}
