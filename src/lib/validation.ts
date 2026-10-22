@@ -1,4 +1,4 @@
-﻿// Shared validation rules and messages.
+// Shared validation rules and messages.
 // Both frontend forms and backend Joi validators follow these exact strings
 // so the user sees identical feedback whichever layer rejects the request.
 
@@ -33,28 +33,57 @@ export const VALIDATION_MESSAGES = {
 } as const;
 
 // ─── Phone ──────────────────────────────────────────────────────
-// Accepts: 0912345678 (10 digits) — but user may paste +2519... or 912...
-// Normalizes to 10-digit local format, or returns "" if unparseable.
+// Mirrors backend/src/utils/phone.js exactly so the two layers never drift.
+//
+// Accepts: 09XXXXXXXX, 07XXXXXXXX (10 digits)
+//          +2519XXXXXXXX, +2517XXXXXXXX (13 chars)
+//          2519XXXXXXXX, 2517XXXXXXXX (12 digits)
+//          9XXXXXXXX, 7XXXXXXXX (9 digits)
+// Returns: { valid: true, phone: "+251XXXXXXXXX" } or { valid: false, error }
+// Dummy/test numbers are rejected so users don't register with placeholders.
+
+export const DUMMY_PHONE_NUMBERS = new Set([
+  "911234567", "912345678",
+  "711234567", "712345678",
+  "900000000",
+  "911111111", "922222222", "933333333",
+  "944444444", "955555555", "966666666",
+  "977777777", "988888888", "999999999",
+]);
+
+export function normalizeAndValidateEthiopianPhone(
+  raw: string
+): { valid: true; phone: string } | { valid: false; error: string } {
+  if (!raw || !String(raw).trim()) {
+    return { valid: false, error: VALIDATION_MESSAGES.phoneRequired };
+  }
+  const cleaned = String(raw).trim().replace(/[\s\-()]/g, "");
+  const match = cleaned.match(/^(?:\+251|251|0)?([79]\d{8})$/);
+  if (!match) {
+    return { valid: false, error: VALIDATION_MESSAGES.phoneFormat };
+  }
+
+  const nineDigits = match[1];
+  if (DUMMY_PHONE_NUMBERS.has(nineDigits) || /^(\d)\1{7,}$/.test(nineDigits)) {
+    return {
+      valid: false,
+      error: "Please provide your real active phone number instead of a test or sample number.",
+    };
+  }
+
+  return { valid: true, phone: `+251${nineDigits}` };
+}
+
+// Canonical normalized phone, or "" if unparseable.
 export function normalizeEthiopianPhone(raw: string): string {
-  const digits = (raw || "").replace(/\D/g, "");
-  if (digits.startsWith("251") && digits.length === 12) return "0" + digits.slice(3);
-  if (digits.startsWith("0") && digits.length === 10) return digits;
-  if (digits.length === 9 && (digits.startsWith("9") || digits.startsWith("7"))) return "0" + digits;
-  return "";
+  const res = normalizeAndValidateEthiopianPhone(raw);
+  return res.valid ? res.phone : "";
 }
 
 // Validates a phone number. Returns null if valid, or an error message.
 export function validatePhone(raw: string): string | null {
-  if (!raw || !raw.trim()) return VALIDATION_MESSAGES.phoneRequired;
-  const normalized = normalizeEthiopianPhone(raw);
-  if (!normalized) {
-    // Could be wrong length or wrong prefix
-    const digits = raw.replace(/\D/g, "");
-    if (digits.length === 10 && !digits.startsWith("0")) return VALIDATION_MESSAGES.phoneFormat;
-    if (digits.length !== 10) return VALIDATION_MESSAGES.phoneDigits;
-    return VALIDATION_MESSAGES.phoneFormat;
-  }
-  return null;
+  const res = normalizeAndValidateEthiopianPhone(raw);
+  return res.valid ? null : res.error;
 }
 
 // ─── Password ───────────────────────────────────────────────────

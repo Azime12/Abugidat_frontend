@@ -22,6 +22,8 @@ import {
   Award,
   Phone,
   MessageSquare,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import toast from "react-hot-toast";
@@ -49,6 +51,8 @@ export default function JobDetailPage({ params }: PageProps) {
     action: async () => {},
   });
 
+  const [matchDrawerOpen, setMatchDrawerOpen] = useState(false);
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "job", id],
     queryFn: async () => {
@@ -70,6 +74,19 @@ export default function JobDetailPage({ params }: PageProps) {
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Failed to update job status");
     },
+  });
+
+  // P7-4 — Match drawer: assign a tutor to this job.
+  const matchMutation = useMutation({
+    mutationFn: ({ tutor_id, hours_per_session, sessions_per_week }: { tutor_id: number; hours_per_session?: number; sessions_per_week?: number }) =>
+      adminService.createMatch({ job_id: Number(id), tutor_id, hours_per_session, sessions_per_week }),
+    onSuccess: () => {
+      toast.success("Tutor matched to this job");
+      queryClient.invalidateQueries({ queryKey: ["admin", "job", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "matches"] });
+      setMatchDrawerOpen(false);
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to match tutor"),
   });
 
   if (isLoading) {
@@ -255,6 +272,30 @@ export default function JobDetailPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Multi-grade lines (P3/P7) */}
+        {Array.isArray(job.grade_lines) && job.grade_lines.length > 0 && (
+          <div className="mt-5 rounded-xl border border-[#0096D6]/20 bg-[#E8F4F8]/40 p-4">
+            <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#006A9B]">
+              Grades & Subjects
+            </h4>
+            <div className="space-y-2">
+              {job.grade_lines.map((line: any, i: number) => (
+                <div key={i} className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="rounded-full bg-[#0096D6] px-2.5 py-0.5 text-xs font-bold text-white">
+                    {line.grade_level}
+                  </span>
+                  <span className="text-gray-700">{line.subjects}</span>
+                  {line.hourly_salary != null && (
+                    <span className="ml-auto font-semibold text-emerald-700">
+                      {line.hourly_salary} ETB/hr
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Detailed Grid */}
         <div className="mt-6 grid grid-cols-2 gap-4 border-t border-gray-100 pt-6 sm:grid-cols-4 text-xs">
           <div className="rounded-xl bg-gray-50 p-3.5">
@@ -402,7 +443,16 @@ export default function JobDetailPage({ params }: PageProps) {
                 Matches ({matches.length})
               </h2>
             </div>
-            <span className="text-xs text-gray-400">Assigned tutor placement</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Assigned tutor placement</span>
+              <button
+                type="button"
+                onClick={() => setMatchDrawerOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-700"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Match a Tutor
+              </button>
+            </div>
           </div>
 
           {matches.length === 0 ? (
@@ -444,6 +494,74 @@ export default function JobDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Match Drawer (P7-4) */}
+      {matchDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMatchDrawerOpen(false)}
+          />
+          <div className="relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-emerald-600" />
+                <h2 className="text-base font-bold text-gray-900">Match a Tutor</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMatchDrawerOpen(false)}
+                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5">
+              {applications.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No applicants to match yet. Approve the job to open applications.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {applications.map((app: any) => {
+                    const t = app.Tutor || {};
+                    const name =
+                      `${t.first_name || ""} ${t.last_name || ""}`.trim() ||
+                      `Tutor #${app.tutor_id}`;
+                    const alreadyMatched = matches.some(
+                      (m: any) => Number(m.tutor_id) === Number(app.tutor_id)
+                    );
+                    return (
+                      <div
+                        key={app.id}
+                        className="rounded-xl border border-gray-100 bg-gray-50/60 p-4"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">{name}</p>
+                            <p className="text-xs text-gray-500">
+                              {t.city || "Addis Ababa"}
+                              {t.phone_number ? ` • ${t.phone_number}` : ""}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={alreadyMatched || matchMutation.isPending}
+                            onClick={() => matchMutation.mutate({ tutor_id: Number(app.tutor_id) })}
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            {alreadyMatched ? "Matched" : "Match"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal

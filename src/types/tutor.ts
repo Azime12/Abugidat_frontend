@@ -33,6 +33,8 @@ export interface Tutor {
 export interface TutorDetail extends Tutor {
   languages?: string[];
   modes?: ("In-person" | "Online")[];
+  curriculums?: string[];
+  skillCategories?: string[];
   verification?: {
     idVerified: boolean;
     qualificationsChecked: boolean;

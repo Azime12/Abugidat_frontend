@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/routing";
 import { Search, Shield, MapPin, Clock } from "lucide-react";
+import { HeroIllustration } from "./HeroIllustration";
 
 export function Hero() {
   return (
@@ -77,13 +78,9 @@ export function Hero() {
 
           {/* Right side illustration */}
           <div className="relative">
-            <div
-              className="aspect-[4/5] rounded-3xl bg-cover bg-center shadow-2xl"
-              style={{
-                backgroundImage:
-                  "url('https://images.unsplash.com/photo-1544717305-2782549b5136?w=800')",
-              }}
-            />
+            <div className="aspect-[4/5] overflow-hidden rounded-3xl bg-[#E4F0F7] shadow-2xl">
+              <HeroIllustration />
+            </div>
 
             {/* Floating badges */}
             <div className="absolute -left-4 top-8 rounded-xl border border-gray-200 bg-white p-4 shadow-xl">

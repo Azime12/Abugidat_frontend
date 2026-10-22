@@ -1,14 +1,15 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tutorDashboardService } from "@/services/api/tutor-dashboard";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Send } from "lucide-react";
 import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/api-errors";
 
 const SUBJECTS = ["Math", "Physics", "Chemistry", "Biology", "English", "Amharic", "Science", "History", "Geography", "Coding"];
 const GRADES = ["KG", "1-4", "5-8", "9-10", "11-12", "Uni"];
+const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "abugida_bot";
 
 export default function TutorProfilePage() {
   const qc = useQueryClient();
@@ -67,6 +68,29 @@ export default function TutorProfilePage() {
       <div>
         <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[#2D2A32]">My Profile</h1>
         <p className="mt-1 text-sm text-gray-500">Parents see this information when browsing tutors.</p>
+      </div>
+
+      {/* P5-7 — connect Telegram so the tutor gets match + job notifications */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-[#0096D6]/20 bg-[#E8F4F8] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-[#0096D6] p-2 text-white">
+            <Send className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-[#2D2A32]">Connect your Telegram</h2>
+            <p className="text-xs text-gray-600">
+              Get job alerts, match updates, and admin messages straight to Telegram.
+            </p>
+          </div>
+        </div>
+        <a
+          href={`https://t.me/${TELEGRAM_BOT_USERNAME}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 rounded-xl bg-[#0096D6] px-5 py-2.5 text-center text-sm font-bold text-white transition hover:bg-[#007FB8]"
+        >
+          Connect Telegram
+        </a>
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 md:p-8">

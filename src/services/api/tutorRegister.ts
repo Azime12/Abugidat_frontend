@@ -77,4 +77,26 @@ export const tutorRegisterService = {
       message: "Profile submitted for review",
     };
   },
+
+  // P5 — shared registration flow: resume / persist in-flight progress.
+  async getProgress(): Promise<any | null> {
+    try {
+      const res = await client.get("/tutor/registration-progress");
+      return res.data?.progress ?? null;
+    } catch {
+      return null;
+    }
+  },
+
+  async saveProgress(payload: {
+    step_key?: string;
+    data?: Record<string, unknown>;
+    completed?: boolean;
+  }): Promise<void> {
+    try {
+      await client.post("/tutor/registration-progress", payload);
+    } catch {
+      // Progress persistence is best-effort; never block the user.
+    }
+  },
 };

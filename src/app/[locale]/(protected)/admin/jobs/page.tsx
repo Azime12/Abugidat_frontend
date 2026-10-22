@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/api/admin";
 import { Link } from "@/i18n/routing";
 import {
   CheckCircle2, XCircle, Loader2, Eye, MapPin, Phone,
-  Calendar, DollarSign, User, Users, Briefcase, X, Lock
+  Calendar, DollarSign, User, Users, Briefcase, X, Lock, Map, List, Plus
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/api-errors";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { AdminDataTable, ColumnDef } from "@/components/admin/AdminDataTable";
+
+const JobMap = dynamic(
+  () => import("@/components/jobs/JobMap").then((m) => m.JobMap),
+  { ssr: false, loading: () => <div className="h-[520px] w-full animate-pulse rounded-2xl bg-gray-100" /> }
+);
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -24,6 +30,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [view, setView] = useState<"list" | "map">("list");
   const qc = useQueryClient();
 
   const [confirmState, setConfirmState] = useState<{
@@ -194,11 +201,44 @@ export default function AdminJobsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[#2D2A32]">Jobs & Requests</h1>
-        <p className="mt-1 text-sm text-gray-500">{isLoading ? "Loading..." : `${filtered.length} shown`}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-[#2D2A32]">Jobs & Requests</h1>
+          <p className="mt-1 text-sm text-gray-500">{isLoading ? "Loading..." : `${filtered.length} shown`}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-xl border border-gray-300 bg-white p-0.5 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setView("list")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                view === "list" ? "bg-[#0096D6] text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" /> List
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("map")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                view === "map" ? "bg-[#0096D6] text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <Map className="h-3.5 w-3.5" /> Map
+            </button>
+          </div>
+          <Link
+            href="/admin/jobs/new"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0096D6] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#007FB8]"
+          >
+            <Plus className="h-3.5 w-3.5" /> New Job
+          </Link>
+        </div>
       </div>
 
+      {view === "map" ? (
+        <JobMap jobs={filtered} heightClass="h-[560px]" />
+      ) : (
       <AdminDataTable
         columns={columns}
         rows={filtered}
@@ -218,6 +258,7 @@ export default function AdminJobsPage() {
         emptyTitle="No jobs found"
         emptyDescription="Jobs appear when parents submit tutoring requests."
       />
+      )}
 
       {/* Confirmation Modal */}
       {confirmState && (

@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { LocationPicker, type PickedLocation } from "@/components/maps/LocationPicker";
 import {
   MapContainer,
   TileLayer,
@@ -77,10 +78,10 @@ const createJobPinIcon = (job: any, isSelected: boolean) => {
     html: `
       <div class="job-icon-pin ${isSelected ? "selected" : ""}">
         <div class="job-pin-head">
-          <span>💼</span>
+          <span>ðŸ’¼</span>
         </div>
         <div class="job-pin-tail"></div>
-        <span class="job-pin-chip">${shortLocation} · ${rateText}</span>
+        <span class="job-pin-chip">${shortLocation} Â· ${rateText}</span>
       </div>
     `,
     iconSize: [88, 54],
@@ -106,6 +107,7 @@ export function JobMap({
   className = "",
   heightClass = "h-[560px]",
 }: JobMapProps) {
+  const [searchLoc, setSearchLoc] = useState<PickedLocation | null>(null);
   const validJobs = useMemo(() => {
     return jobs.filter((j) =>
       j && isValidLatLng([Number(j.latitude), Number(j.longitude)])
@@ -119,6 +121,16 @@ export function JobMap({
 
   return (
     <div className={`relative overflow-hidden rounded-2xl border border-gray-200 shadow-sm ${heightClass} ${className}`}>
+      {/* P2-6: search box above the map */}
+      <div className="mb-3">
+        <LocationPicker
+          value={searchLoc}
+          onChange={(loc: PickedLocation) => {
+            setSearchLoc(loc);
+          }}
+          placeholder="Search area to recenter map..."
+        />
+      </div>
       <MapContainer
         center={isValidLatLng(userLocation) ? userLocation : [9.02, 38.76]}
         zoom={12}
@@ -134,7 +146,7 @@ export function JobMap({
 
         <JobMapController
           points={validJobs}
-          userLocation={userLocation}
+          userLocation={searchLoc ? [searchLoc.lat, searchLoc.lng] : undefined}
           selectedPoint={selectedJob}
         />
 
@@ -160,7 +172,7 @@ export function JobMap({
                       {job.student_level || "Student"}
                     </span>
                     <span className="text-xs font-bold text-emerald-600">
-                      {job.hourly_salary ? `${Math.round(Number(job.hourly_salary))} ብር/hr` : "Negotiable"}
+                      {job.hourly_salary ? `${Math.round(Number(job.hourly_salary))} á‰¥áˆ­/hr` : "Negotiable"}
                     </span>
                   </div>
 
@@ -182,7 +194,7 @@ export function JobMap({
                         title="View road on Google Maps"
                       >
                         <Navigation className="h-3 w-3" />
-                        <span>Road ↗</span>
+                        <span>Road â†—</span>
                       </a>
                     </div>
 

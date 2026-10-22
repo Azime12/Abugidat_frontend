@@ -1,12 +1,23 @@
 import type { TutorDetail } from "@/types/tutor";
 
 export function TutorTeachingDetails({ tutor }: { tutor: TutorDetail }) {
-  const rows = [
-    { label: "Subjects", value: tutor.subjects.join(", ") },
+  const rows: { label: string; value: string }[] = [
+    { label: "Subjects", value: (tutor.subjects ?? []).join(", ") },
     {
       label: "Grades",
-      value: tutor.gradeLevels.map((g) => `Grade ${g}`).join(", "),
+      value: (tutor.gradeLevels ?? []).map((g) => `Grade ${g}`).join(", "),
     },
+  ];
+
+  // P7-8 — surface curriculum + skill categories on the public profile.
+  if (tutor.curriculums && tutor.curriculums.length > 0) {
+    rows.push({ label: "Curriculum", value: tutor.curriculums.join(", ") });
+  }
+  if (tutor.skillCategories && tutor.skillCategories.length > 0) {
+    rows.push({ label: "Skills", value: tutor.skillCategories.join(", ") });
+  }
+
+  rows.push(
     {
       label: "Languages",
       value: (tutor.languages ?? ["Amharic", "English"]).join(", "),
@@ -14,8 +25,8 @@ export function TutorTeachingDetails({ tutor }: { tutor: TutorDetail }) {
     {
       label: "Teaching mode",
       value: (tutor.modes ?? ["In-person"]).join(", "),
-    },
-  ];
+    }
+  );
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 md:p-8">

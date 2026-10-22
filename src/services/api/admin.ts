@@ -24,6 +24,7 @@ export const adminService = {
   getJobs: (status?: string) =>
     client.get("/jobs", { params: status ? { status } : {} }),
   getJobById: (id: number | string) => client.get(`/jobs/${id}`),
+  createJob: (data: Record<string, unknown>) => client.post("/jobs", data),
   updateJobStatus: (id: number | string, status: string, rejection_reason?: string) =>
     client.patch(`/jobs/${id}/status`, { status, rejection_reason }),
 

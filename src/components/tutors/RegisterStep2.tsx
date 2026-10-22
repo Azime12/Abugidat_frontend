@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
@@ -7,12 +7,13 @@ import {
 } from "lucide-react";
 import type { GradeLevel, TutorRegisterTeachingDetails } from "@/types/tutor";
 import { useCurriculum } from "@/hooks/useCurriculum";
+import { LocationPicker, type PickedLocation } from "@/components/maps/LocationPicker";
 
-// ─── Location picker (unchanged inline copy from original) ────────────────
-// Trimmed here for brevity — the previous file's inline PlaceSearch and
+// â”€â”€â”€ Location picker (unchanged inline copy from original) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Trimmed here for brevity â€” the previous file's inline PlaceSearch and
 // FileUploadButton are re-used verbatim. See full file in ../bak if needed.
 
-// ─── Main form ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Props {
   initial: TutorRegisterTeachingDetails;
   onBack: () => void;
@@ -168,7 +169,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
 
-      {/* ── Curriculum tabs ── */}
+      {/* â”€â”€ Curriculum tabs â”€â”€ */}
       <div>
         <label className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
           <BookOpen className="h-4 w-4 text-[#0096D6]" />
@@ -198,7 +199,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         </div>
       </div>
 
-      {/* ── Grade levels ── */}
+      {/* â”€â”€ Grade levels â”€â”€ */}
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -310,7 +311,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         {errors.gradeLevels && <p className="mt-1 text-xs text-red-500">{errors.gradeLevels}</p>}
       </div>
 
-      {/* ── Subjects ── */}
+      {/* â”€â”€ Subjects â”€â”€ */}
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -438,7 +439,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         {errors.subjects && <p className="mt-1 text-xs text-red-500">{errors.subjects}</p>}
       </div>
 
-      {/* ── Teaching mode ── */}
+      {/* â”€â”€ Teaching mode â”€â”€ */}
       <div>
         <label className="mb-2 block text-sm font-bold text-[#2D2A32]">Teaching Mode</label>
         <div className="grid grid-cols-3 gap-2">
@@ -453,28 +454,35 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
                   : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300"
               }`}
             >
-              {m === "In-person" ? "🏠 In-person" : m === "Online" ? "💻 Online" : "✨ Both"}
+              {m === "In-person" ? "ðŸ  In-person" : m === "Online" ? "ðŸ’» Online" : "âœ¨ Both"}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ── Location (simplified text input — the original had a full map picker) ── */}
+      {/* â”€â”€ Location (simplified text input â€” the original had a full map picker) â”€â”€ */}
       <div>
         <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
           <MapPin className="h-4 w-4 text-[#0096D6]" />
           Your city / area
         </label>
-        <input
-          type="text"
-          value={areaName}
-          onChange={(e) => setAreaName(e.target.value)}
-          placeholder="e.g. Bole, Addis Ababa"
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#0096D6]"
-        />
+        <LocationPicker
+        value={
+          areaName && latitude != null && longitude != null
+            ? { lat: latitude, lng: longitude, displayName: areaName }
+            : null
+        }
+        onChange={(loc: PickedLocation) => {
+          setAreaName(loc.displayName);
+          setLatitude(loc.lat);
+          setLongitude(loc.lng);
+        }}
+        required
+        placeholder="Search area, landmark, or junction..."
+      />
       </div>
 
-      {/* ── CV upload ── */}
+      {/* â”€â”€ CV upload â”€â”€ */}
       <div>
         <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
           <FileText className="h-4 w-4 text-[#0096D6]" />
@@ -507,7 +515,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         {errors.cvFile && <p className="mt-1 text-xs text-red-500">{errors.cvFile}</p>}
       </div>
 
-      {/* ── Certificate upload ── */}
+      {/* â”€â”€ Certificate upload â”€â”€ */}
       <div>
         <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
           <FileText className="h-4 w-4 text-[#0096D6]" />
@@ -540,7 +548,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         {errors.educationFile && <p className="mt-1 text-xs text-red-500">{errors.educationFile}</p>}
       </div>
 
-      {/* ── Bio ── */}
+      {/* â”€â”€ Bio â”€â”€ */}
       <div>
         <label className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
           <BookOpen className="h-4 w-4 text-[#0096D6]" />
@@ -550,7 +558,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={4}
-          placeholder="Describe your experience, teaching style, and what makes you a great tutor…"
+          placeholder="Describe your experience, teaching style, and what makes you a great tutorâ€¦"
           className={`w-full resize-none rounded-lg border bg-white px-4 py-3 text-sm outline-none transition ${
             errors.bio ? "border-red-400" : "border-gray-300"
           } focus:border-[#0096D6]`}
@@ -559,7 +567,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         {errors.bio && <p className="text-xs text-red-500">{errors.bio}</p>}
       </div>
 
-      {/* ── Actions ── */}
+      {/* â”€â”€ Actions â”€â”€ */}
       <div className="flex gap-3 pt-1">
         <button
           type="button"
@@ -567,7 +575,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
           disabled={submitting}
           className="rounded-xl border border-gray-300 bg-white px-6 py-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
-          ← Back
+          â† Back
         </button>
         <button
           type="submit"
@@ -576,10 +584,10 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         >
           {submitting ? (
             <span className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" /> Submitting…
+              <Loader2 className="h-4 w-4 animate-spin" /> Submittingâ€¦
             </span>
           ) : (
-            "Submit for Review →"
+            "Submit for Review â†’"
           )}
         </button>
       </div>

@@ -31,6 +31,43 @@ function parseSubjects(raw: any): string[] {
     .filter(Boolean);
 }
 
+const CURRICULUM_LABELS: Record<string, string> = {
+  "et-national": "Ethiopian National",
+  igcse: "IGCSE / Cambridge",
+  ib: "IB",
+  american: "American / SAT",
+  skill: "Skill / Extracurricular",
+};
+
+function parseCurriculums(raw: any): string[] {
+  const out: string[] = [];
+  const push = (id: any) => {
+    if (!id) return;
+    const label = CURRICULUM_LABELS[String(id)] || String(id);
+    if (!out.includes(label)) out.push(label);
+  };
+
+  if (Array.isArray(raw.curriculums)) {
+    for (const c of raw.curriculums) {
+      if (typeof c === "string") push(c);
+      else push(c?.curriculum);
+    }
+  } else if (raw.curriculum) {
+    push(raw.curriculum);
+  }
+  return out;
+}
+
+function parseSkillCategories(raw: any): string[] {
+  const hasSkill = Array.isArray(raw.curriculums)
+    ? raw.curriculums.some((c: any) =>
+        typeof c === "string" ? c === "skill" : c?.curriculum === "skill"
+      )
+    : raw.curriculum === "skill";
+  if (!hasSkill) return [];
+  return parseSubjects(raw.subjects);
+}
+
 function backendTutorToTutor(raw: any): Tutor {
   return {
     id: String(raw.id),
@@ -170,6 +207,8 @@ export const tutorService = {
       ratingCount: raw.ratingCount != null ? Number(raw.ratingCount) : base.ratingCount,
       languages: ["Amharic", "English"],
       modes: base.onlineOk ? ["In-person", "Online"] : ["In-person"],
+      curriculums: parseCurriculums(raw),
+      skillCategories: parseSkillCategories(raw),
       verification: {
         idVerified: base.verified,
         qualificationsChecked: base.verified,
