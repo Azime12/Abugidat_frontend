@@ -3,10 +3,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { parentRequestService } from "@/services/api/parent-requests";
+import { paymentService } from "@/services/api/payments";
 import { Link } from "@/i18n/routing";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  Plus, FileText, MapPin, Clock, Lock, AlertCircle,
+  Plus, FileText, MapPin, Clock, Lock, AlertCircle, CreditCard,
 } from "lucide-react";
 
 export default function ParentDashboardPage() {
@@ -19,13 +20,24 @@ export default function ParentDashboardPage() {
     queryFn: async () => (await parentRequestService.mine()).data,
   });
 
+  const { data: paymentsData } = useQuery({
+    queryKey: ["parent", "payments"],
+    queryFn: async () => (await paymentService.mine()).data,
+  });
+
   const requests = data?.requests ?? [];
+  const pendingIntents = (paymentsData?.intents ?? []).filter(
+    (i: any) => i.status === "pending" && i.purpose === "listing_fee"
+  );
   const openCount = requests.filter((r: any) => r.status === "open").length;
   const totalUnlocks = requests.reduce((sum: number, r: any) => sum + (r.unlock_count || 0), 0);
 
   const statusBadge = (status: string) => {
     if (status === "closed") return { label: t("closed"), class: "bg-gray-100 text-gray-700 border-gray-200" };
     if (status === "expired") return { label: t("expired"), class: "bg-amber-50 text-amber-700 border-amber-200" };
+    if (status === "pending_review") return { label: "Under review", class: "bg-sky-50 text-sky-700 border-sky-200" };
+    if (status === "pending_payment") return { label: "Awaiting payment", class: "bg-amber-50 text-amber-700 border-amber-200" };
+    if (status === "rejected") return { label: "Rejected", class: "bg-red-50 text-red-700 border-red-200" };
     return { label: t("open"), class: "bg-emerald-50 text-emerald-700 border-emerald-200" };
   };
 
@@ -73,6 +85,41 @@ export default function ParentDashboardPage() {
           </div>
         </div>
 
+        {/* Awaiting payment */}
+        {pendingIntents.length > 0 && (
+          <div className="mb-6">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-amber-600">
+              Awaiting payment
+            </h2>
+            <div className="space-y-3">
+              {pendingIntents.map((i: any) => (
+                <Link
+                  key={i.id}
+                  href={`/dashboard/requests/pay/${i.id}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 transition hover:border-amber-300"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                      <CreditCard className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-amber-900">
+                        Pay {Number(i.amount_etb || 0)} ETB to publish your request
+                      </p>
+                      <p className="text-xs text-amber-700">
+                        Your request is on hold until payment is verified.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white">
+                    Pay now
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Request list */}
         <div>
           <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-gray-500">
@@ -118,10 +165,11 @@ export default function ParentDashboardPage() {
             <div className="space-y-3">
               {requests.map((r: any) => {
                 const badge = statusBadge(r.status);
+                const needsPayment = r.status === "pending_payment" && r.payment_intent_id;
                 return (
                   <Link
                     key={r.id}
-                    href={`/dashboard/requests/${r.id}`}
+                    href={needsPayment ? `/dashboard/requests/pay/${r.payment_intent_id}` : `/dashboard/requests/${r.id}`}
                     className="block rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 transition hover:border-[#0096D6] hover:shadow-md"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">

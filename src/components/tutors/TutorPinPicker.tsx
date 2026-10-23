@@ -55,16 +55,16 @@ export function TutorPinPicker({
 }) {
   const [position, setPosition] = useState<[number, number]>([initialLat, initialLng]);
   const [snappedPosition, setSnappedPosition] = useState<[number, number]>([
-    Math.round(initialLat / 0.0045) * 0.0045,
-    Math.round(initialLng / 0.0045) * 0.0045,
+    Math.round(initialLat / 0.0009) * 0.0009,
+    Math.round(initialLng / 0.0009) * 0.0009,
   ]);
   const [saving, setSaving] = useState(false);
 
   const handlePick = (lat: number, lng: number) => {
     setPosition([lat, lng]);
-    // Server grid snapping preview (~500m grid)
-    const snappedLat = Math.round(lat / 0.0045) * 0.0045;
-    const snappedLng = Math.round(lng / 0.0045) * 0.0045;
+    // Server grid snapping preview (~100m grid)
+    const snappedLat = Math.round(lat / 0.0009) * 0.0009;
+    const snappedLng = Math.round(lng / 0.0009) * 0.0009;
     setSnappedPosition([snappedLat, snappedLng]);
     if (onChange) {
       onChange({ latitude: snappedLat, longitude: snappedLng });
@@ -79,7 +79,7 @@ export function TutorPinPicker({
         latitude: position[0],
         longitude: position[1],
       });
-      toast.success("Base point saved with privacy grid-snapping (500m)!");
+      toast.success("Base point saved with privacy grid-snapping (100m)!");
       if (onSaved && res.data?.snapped_base_point) {
         onSaved(res.data.snapped_base_point);
       }
@@ -125,7 +125,7 @@ export function TutorPinPicker({
         <div>
           <span className="font-bold">Privacy Guarantee:</span> Never drop the pin directly on your
           house. Pick a nearby junction or landmark. The server automatically snaps your location to a
-          ~500m grid zone (blue circle) before saving.
+          ~100m grid zone (blue circle) before saving.
         </div>
       </div>
 
@@ -157,10 +157,10 @@ export function TutorPinPicker({
             }}
           />
 
-          {/* Privacy Zone: ~500m Snapped Base Area (radius ~250m) */}
+          {/* Privacy Zone: ~100m Snapped Base Area (radius ~50m) */}
           <Circle
             center={snappedPosition}
-            radius={250}
+            radius={50}
             pathOptions={{
               color: "#0096D6",
               fillColor: "#0096D6",
@@ -190,7 +190,7 @@ export function TutorPinPicker({
           </div>
           <div className="flex items-center gap-1.5 font-medium text-gray-700">
             <span className="h-2 w-2 rounded-full border border-dashed border-[#0096D6] bg-[#0096D6]/30" />
-            Snapped 500m privacy area
+            Snapped 100m privacy area
           </div>
           <div className="flex items-center gap-1.5 font-medium text-gray-700">
             <span className="h-2 w-2 rounded-full border border-[#FFB800] bg-[#FFB800]/20" />

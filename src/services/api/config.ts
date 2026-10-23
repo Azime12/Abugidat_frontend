@@ -2,6 +2,7 @@ import client from "@/lib/api-client";
 
 export interface PublicConfig {
   kulf_pack_prices: Record<string, number>;
+  kulf_unlock_cost?: number;
   payment_accounts: {
     telebirr?: string;
     cbe?: string;

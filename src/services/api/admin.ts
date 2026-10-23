@@ -52,6 +52,12 @@ export const adminService = {
   // Waitlist
   getWaitlist: () => client.get("/requests/waitlist"),
 
+  // Parent requests (admin review inbox)
+  getParentRequests: (status?: string) =>
+    client.get("/requests/admin/all", { params: status ? { status } : {} }),
+  reviewParentRequest: (id: string, action: "approve" | "reject") =>
+    client.post(`/requests/${id}/review`, { action }),
+
   // Configuration
   getConfig: () => client.get("/config"),
   updateConfig: (data: Record<string, unknown>) => client.patch("/config", data),

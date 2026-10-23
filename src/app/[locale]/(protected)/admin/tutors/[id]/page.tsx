@@ -30,6 +30,7 @@ import {
 import toast from "react-hot-toast";
 import { resolveFileUrl } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { AdminLocationMap } from "@/components/admin/AdminLocationMap";
 
 interface PageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -363,6 +364,20 @@ export default function TutorDetailPage({ params }: PageProps) {
               </span>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Exact location map (admin only) */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+          <MapPin className="h-5 w-5 text-[#0096D6]" /> Tutor Location (exact)
+        </h2>
+        <div className="mt-4">
+          <AdminLocationMap
+            lat={tutor.latitude}
+            lng={tutor.longitude}
+            label={tutor.city || "Addis Ababa"}
+          />
         </div>
       </div>
 

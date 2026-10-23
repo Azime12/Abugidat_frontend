@@ -2,8 +2,8 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import type { GradeLevel, TutorSearchFilters } from "@/types/tutor";
+import { useCurriculum } from "@/hooks/useCurriculum";
 
-const GRADES: GradeLevel[] = ["KG", "1-4", "5-8", "9-10", "11-12", "Uni"];
 const DISTANCES = ["under 1 km", "1-3 km", "3-5 km", "5+ km"];
 
 interface Props {
@@ -13,6 +13,10 @@ interface Props {
 }
 
 export function TutorFilters({ filters, onChange, onReset }: Props) {
+  const { data: curriculumConfig } = useCurriculum();
+  const ethiopian = curriculumConfig?.curriculums?.find((c) => c.id === "et-national");
+  const liveGrades = ethiopian?.grades?.map((g) => g.label).filter((g) => g !== "All Levels") ?? [];
+
   const toggleGrade = (grade: GradeLevel) => {
     const current = filters.gradeLevels ?? [];
     const next = current.includes(grade)
@@ -30,7 +34,7 @@ export function TutorFilters({ filters, onChange, onReset }: Props) {
   };
 
   return (
-    <aside className="w-full space-y-6 rounded-2xl border border-gray-200 bg-white p-6 lg:w-64 lg:shrink-0">
+    <aside className="w-full space-y-6 rounded-2xl border border-gray-200 bg-white p-6 lg:w-full lg:shrink-0">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-[#2D2A32]">Filters</h3>
         <button
@@ -47,13 +51,13 @@ export function TutorFilters({ filters, onChange, onReset }: Props) {
           Grade level
         </h4>
         <div className="space-y-2">
-          {GRADES.map((grade) => (
+          {liveGrades.map((grade) => (
             <label key={grade} className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox
                 checked={(filters.gradeLevels ?? []).includes(grade)}
                 onCheckedChange={() => toggleGrade(grade)}
               />
-              <span>Grade {grade}</span>
+              <span>{grade}</span>
             </label>
           ))}
         </div>

@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/api-errors";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useCurriculum } from "@/hooks/useCurriculum";
+import { SchedulePicker } from "@/components/shared/SchedulePicker";
 
 const AREAS = [
   "Bole", "Kirkos", "Yeka", "Arada", "Gulele", "Lideta",
@@ -53,7 +54,7 @@ export default function NewParentRequestPage() {
   const mutation = useMutation({
     mutationFn: () => parentRequestService.create(form),
     onSuccess: () => {
-      toast.success("Request posted! Tutors will see it shortly.", { icon: "🎉" });
+      toast.success("Request submitted! An admin will review it before it goes live.", { icon: "📝" });
       qc.invalidateQueries({ queryKey: ["parent", "requests"] });
       router.push("/dashboard");
     },
@@ -221,19 +222,16 @@ export default function NewParentRequestPage() {
             title="Additional details"
             description="Optional — helps tutors understand your needs better."
           >
-            <Field
-              icon={Clock}
-              label="Preferred schedule"
-              hint="e.g. Weekdays after 4 PM"
-            >
-              <input
-                type="text"
+            <div>
+              <label className="mb-1.5 flex items-center gap-1 text-sm font-bold text-[#2D2A32]">
+                <Clock className="h-4 w-4 text-[#0096D6]" />
+                Preferred schedule
+              </label>
+              <SchedulePicker
                 value={form.preferred_time}
-                onChange={(e) => setForm({ ...form, preferred_time: e.target.value })}
-                placeholder="e.g. Weekdays after 4 PM"
-                className="input-base"
+                onChange={(v) => setForm({ ...form, preferred_time: v })}
               />
-            </Field>
+            </div>
 
             <Field
               icon={MessageSquare}

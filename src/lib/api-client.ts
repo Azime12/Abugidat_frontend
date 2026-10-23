@@ -3,7 +3,9 @@ import toast from "react-hot-toast";
 import { getSessionId, getCsrfToken, clearAuth } from "./auth-storage";
 
 const baseURL =
-  typeof window !== "undefined" ? "/api" : "http://127.0.0.1:5000/api";
+  typeof window !== "undefined"
+    ? "/api"
+    : process.env.BACKEND_INTERNAL_URL || "http://127.0.0.1:5000/api";
 
 const client: AxiosInstance = axios.create({
   baseURL,

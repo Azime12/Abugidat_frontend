@@ -5,7 +5,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: process.env.VERCEL ? undefined : "standalone",
   transpilePackages: ["framer-motion"],
   images: {
     unoptimized: true,

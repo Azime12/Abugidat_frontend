@@ -24,7 +24,7 @@ export interface CreateRequestData {
   tutorId: string;
   parentName: string;
   parentPhone: string;
-  gradeLevel: string;
+  gradeLevels: string[];
   note?: string;
   preferredTime?: string;
   consent: boolean;

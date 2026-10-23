@@ -11,15 +11,13 @@ import type {
 // ─── Shape mapping: backend → frontend ────────────────────────────
 function parseGradeLevels(raw: any): GradeLevel[] {
   if (!raw) return [];
-  const text = String(raw);
-  if (!text.trim()) return [];
-  return text
+  if (Array.isArray(raw)) {
+    return raw.map((g) => String(g).trim()).filter(Boolean);
+  }
+  return String(raw)
     .split(",")
-    .map((g) => g.trim().toUpperCase())
-    .filter((g) =>
-      ["KG", "1-4", "5-8", "9-10", "11-12", "UNI"].includes(g)
-    )
-    .map((g) => (g === "UNI" ? "Uni" : g)) as GradeLevel[];
+    .map((g) => g.trim())
+    .filter(Boolean);
 }
 
 function parseSubjects(raw: any): string[] {
@@ -29,6 +27,29 @@ function parseSubjects(raw: any): string[] {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+// Match a specific grade against a tutor's grade entry (exact or range).
+function parseGradeRange(g: string) {
+  const m = String(g).match(/grade\s*(\d+)(?:\s*-\s*(\d+))?/i);
+  if (!m) return null;
+  const lo = parseInt(m[1], 10);
+  const hi = m[2] ? parseInt(m[2], 10) : lo;
+  return { lo, hi };
+}
+
+function gradeMatches(tutorGrade: string, reqGrade: string): boolean {
+  const tg = String(tutorGrade || "").toLowerCase().trim();
+  const rg = String(reqGrade || "").toLowerCase().trim();
+  if (!tg || !rg) return false;
+  if (tg === rg) return true;
+  if (tg === "all levels" || rg === "all levels") return true;
+  const tRange = parseGradeRange(tg);
+  const rRange = parseGradeRange(rg);
+  if (tRange && rRange) {
+    return tRange.lo <= rRange.hi && tRange.hi >= rRange.lo;
+  }
+  return false;
 }
 
 const CURRICULUM_LABELS: Record<string, string> = {
@@ -111,7 +132,9 @@ export function applyFilters(
 
   if (filters.gradeLevels && filters.gradeLevels.length > 0) {
     result = result.filter((t) =>
-      filters.gradeLevels!.some((g) => t.gradeLevels.includes(g))
+      filters.gradeLevels!.some((g) =>
+        t.gradeLevels.some((tg) => gradeMatches(tg, g))
+      )
     );
   }
 

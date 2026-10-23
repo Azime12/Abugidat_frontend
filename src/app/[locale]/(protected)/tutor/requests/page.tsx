@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tutorDashboardService } from "@/services/api/tutor-dashboard";
+import { configService } from "@/services/api/config";
 import { Lock, Loader2, MapPin, Clock, Phone, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
 import { getApiErrorMessage } from "@/lib/api-errors";
@@ -22,6 +23,13 @@ export default function TutorOpenRequestsPage() {
     queryKey: ["kulf", "balance"],
     queryFn: async () => (await tutorDashboardService.kulfBalance()).data,
   });
+
+  const { data: publicConfig } = useQuery({
+    queryKey: ["public", "config"],
+    queryFn: configService.getPublicConfig,
+    staleTime: 60_000,
+  });
+  const unlockCost = Number(publicConfig?.kulf_unlock_cost ?? 1);
 
   const { data, isLoading } = useQuery({
     queryKey: ["tutor", "open-requests"],
@@ -119,7 +127,7 @@ export default function TutorOpenRequestsPage() {
               <div className="mt-auto pt-4">
                 <button
                   onClick={() => setUnlockTarget(r)}
-                  disabled={unlockMutation.isPending || balance < 1 || r.unlock_count >= r.max_unlocks}
+                  disabled={unlockMutation.isPending || balance < unlockCost || r.unlock_count >= r.max_unlocks}
                   className="w-full rounded-lg bg-[#0096D6] py-2.5 text-sm font-bold text-white hover:bg-[#007FB8] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {unlockMutation.isPending ? (
@@ -127,7 +135,7 @@ export default function TutorOpenRequestsPage() {
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       {t("unlocking")}
                     </span>
-                  ) : balance < 1 ? (
+                  ) : balance < unlockCost ? (
                     t("notEnoughKulf")
                   ) : r.unlock_count >= r.max_unlocks ? (
                     t("allSlotsTaken")
@@ -240,7 +248,7 @@ export default function TutorOpenRequestsPage() {
           message={
             <div className="space-y-2">
               <p>{t("unlockConfirmMsg")}</p>
-              <p className="text-xs text-gray-500">{t("balanceAfter", { from: balance, to: balance - 1 })}</p>
+              <p className="text-xs text-gray-500">{t("balanceAfter", { from: balance, to: balance - unlockCost })}</p>
               <p className="text-xs text-gray-500">{t("refundHint")}</p>
             </div>
           }

@@ -192,8 +192,8 @@ export function TutorsPageClient() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
         <div className="flex flex-col gap-6 lg:flex-row">
-          {/* ── Filters Sidebar ── */}
-          <div className={`${showFilters ? "block" : "hidden"} lg:block lg:w-72 shrink-0`}>
+          {/* ── Filters Sidebar (sticky on desktop; scrolls with page on mobile) ── */}
+          <div className={`${showFilters ? "block" : "hidden"} shrink-0 lg:block lg:w-72 lg:self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto`}>
             <TutorFilters
               filters={filters}
               onChange={setFilters}

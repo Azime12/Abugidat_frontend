@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
@@ -454,7 +454,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
                   : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300"
               }`}
             >
-              {m === "In-person" ? "ðŸ  In-person" : m === "Online" ? "ðŸ’» Online" : "âœ¨ Both"}
+              {m === "In-person" ? "🏠 In-person" : m === "Online" ? "💻 Online" : "✨ Both"}
             </button>
           ))}
         </div>
@@ -558,7 +558,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={4}
-          placeholder="Describe your experience, teaching style, and what makes you a great tutorâ€¦"
+          placeholder="Describe your experience, teaching style, and what makes you a great tutor…"
           className={`w-full resize-none rounded-lg border bg-white px-4 py-3 text-sm outline-none transition ${
             errors.bio ? "border-red-400" : "border-gray-300"
           } focus:border-[#0096D6]`}
@@ -575,7 +575,7 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
           disabled={submitting}
           className="rounded-xl border border-gray-300 bg-white px-6 py-3.5 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
-          â† Back
+          ← Back
         </button>
         <button
           type="submit"
@@ -584,10 +584,10 @@ export function RegisterStep2({ initial, onBack, onSubmit, submitting }: Props) 
         >
           {submitting ? (
             <span className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" /> Submittingâ€¦
+              <Loader2 className="h-4 w-4 animate-spin" /> Submitting…
             </span>
           ) : (
-            "Submit for Review â†’"
+            "Submit for Review →"
           )}
         </button>
       </div>

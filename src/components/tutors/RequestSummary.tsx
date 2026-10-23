@@ -43,7 +43,7 @@ export function RequestSummary({
       <div className="space-y-2 py-4 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-500">Grade</span>
-          <span className="font-bold text-[#2D2A32]">Grade {gradeLevel}</span>
+          <span className="font-bold text-[#2D2A32]">{gradeLevel}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-500">Location</span>

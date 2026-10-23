@@ -1,4 +1,4 @@
-﻿import client from "@/lib/api-client";
+import client from "@/lib/api-client";
 import type { CreateRequestData, ParentRequest } from "@/types/request";
 
 // Parent requests flow into the Jobs table (status: "pending")
@@ -11,10 +11,13 @@ export const requestService = {
       throw new Error("You must agree to the Terms to continue");
     }
 
+    const grades = Array.isArray(data.gradeLevels) ? data.gradeLevels : [];
+
     const res = await client.post("/public/jobs", {
       parent_name: data.parentName || "Anonymous Parent",
       parent_phone_contact: data.parentPhone,
-      student_level: data.gradeLevel,
+      student_level: grades.join(", "),
+      grade_levels: grades,
       subjects: "Tutoring", // backend will accept; parent specified subject in note
       location: "Addis Ababa",
       schedule: data.preferredTime || "To be discussed",
@@ -30,7 +33,7 @@ export const requestService = {
       id: String(job.id),
       tutorId: data.tutorId,
       tutorName: "Tutor",
-      gradeLevel: data.gradeLevel,
+      gradeLevel: grades.join(", "),
       parentName: data.parentName,
       parentPhone: data.parentPhone,
       note: data.note,

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, Navigation, Loader2, X } from "lucide-react";
@@ -19,8 +19,9 @@ interface Props {
   disabled?: boolean;
 }
 
-const SNAP_GRID = 0.0045;
-const snap = (v: number) => Math.round(v / SNAP_GRID) * SNAP_GRID;
+// The picker stores the EXACT coordinates. ~100m privacy snapping is applied
+// server-side at the public API layer only, so admins can view the exact point.
+const snap = (v: number) => Number(v);
 
 export function LocationPicker({ value, onChange, placeholder, required, disabled }: Props) {
   const [query, setQuery] = useState(value?.displayName ?? "");
@@ -92,7 +93,8 @@ export function LocationPicker({ value, onChange, placeholder, required, disable
   const pickSuggestion = (s: any) => {
     const lat = snap(Number(s.lat));
     const lng = snap(Number(s.lng));
-    const displayName = s.displayName || s.name;
+    // Prefer the short name (suburb/area), never the full Nominatim address.
+    const displayName = s.name || s.area || s.displayName || "";
     setQuery(displayName);
     setOpen(false);
     setSuggestions([]);
@@ -159,12 +161,6 @@ export function LocationPicker({ value, onChange, placeholder, required, disable
       </div>
 
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-
-      {value?.lat && value?.lng && (
-        <p className="mt-1 text-xs text-gray-500">
-          {value.lat.toFixed(4)}, {value.lng.toFixed(4)} — snapped to 500m grid
-        </p>
-      )}
 
       {open && (suggestions.length > 0 || landmarks.length > 0) && (
         <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-72 overflow-y-auto">

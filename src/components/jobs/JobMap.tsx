@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocationPicker, type PickedLocation } from "@/components/maps/LocationPicker";
@@ -78,10 +78,10 @@ const createJobPinIcon = (job: any, isSelected: boolean) => {
     html: `
       <div class="job-icon-pin ${isSelected ? "selected" : ""}">
         <div class="job-pin-head">
-          <span>ðŸ’¼</span>
+          <span>💼</span>
         </div>
         <div class="job-pin-tail"></div>
-        <span class="job-pin-chip">${shortLocation} Â· ${rateText}</span>
+        <span class="job-pin-chip">${shortLocation} · ${rateText}</span>
       </div>
     `,
     iconSize: [88, 54],
@@ -172,7 +172,7 @@ export function JobMap({
                       {job.student_level || "Student"}
                     </span>
                     <span className="text-xs font-bold text-emerald-600">
-                      {job.hourly_salary ? `${Math.round(Number(job.hourly_salary))} á‰¥áˆ­/hr` : "Negotiable"}
+                      {job.hourly_salary ? `${Math.round(Number(job.hourly_salary))} ብር/hr` : "Negotiable"}
                     </span>
                   </div>
 
@@ -194,7 +194,7 @@ export function JobMap({
                         title="View road on Google Maps"
                       >
                         <Navigation className="h-3 w-3" />
-                        <span>Road â†—</span>
+                        <span>Road ↗</span>
                       </a>
                     </div>
 

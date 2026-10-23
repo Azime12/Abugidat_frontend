@@ -13,9 +13,11 @@ interface ConfigForm {
   kulf25: number;
   kulf50: number;
   telebirr: string;
+  telegram: string;
   cbe: string;
   bank: string;
   parent_listing_fee: number;
+  kulf_unlock_cost: number;
   group_link: string;
   required_group_members_threshold: number;
   required_invites_threshold: number;
@@ -32,9 +34,11 @@ const DEFAULT_FORM: ConfigForm = {
   kulf25: 350,
   kulf50: 600,
   telebirr: "0911234567",
+  telegram: "",
   cbe: "1000123456789",
   bank: "Awash: 0123-XXXX",
   parent_listing_fee: 0,
+  kulf_unlock_cost: 1,
   group_link: "https://t.me/AbugidaTutors_group",
   required_group_members_threshold: 0,
   required_invites_threshold: 0,
@@ -122,9 +126,11 @@ export default function AdminSettingsPage() {
       kulf25: Number(prices["25"] ?? DEFAULT_FORM.kulf25),
       kulf50: Number(prices["50"] ?? DEFAULT_FORM.kulf50),
       telebirr: accounts.telebirr || DEFAULT_FORM.telebirr,
+      telegram: accounts.telegram || DEFAULT_FORM.telegram,
       cbe: accounts.cbe || DEFAULT_FORM.cbe,
       bank: accounts.bank || DEFAULT_FORM.bank,
       parent_listing_fee: Number(c.parent_listing_fee ?? DEFAULT_FORM.parent_listing_fee),
+      kulf_unlock_cost: Number(c.kulf_unlock_cost ?? DEFAULT_FORM.kulf_unlock_cost),
       group_link: c.group_link || DEFAULT_FORM.group_link,
       required_group_members_threshold: Number(c.required_group_members_threshold ?? 0),
       required_invites_threshold: Number(c.required_invites_threshold ?? 0),
@@ -141,8 +147,9 @@ export default function AdminSettingsPage() {
     mutationFn: () =>
       adminService.updateConfig({
         kulf_pack_prices: { "10": form.kulf10, "25": form.kulf25, "50": form.kulf50 },
-        payment_accounts: { telebirr: form.telebirr, cbe: form.cbe, bank: form.bank },
+        payment_accounts: { telebirr: form.telebirr, telegram: form.telegram, cbe: form.cbe, bank: form.bank },
         parent_listing_fee: form.parent_listing_fee,
+        kulf_unlock_cost: form.kulf_unlock_cost,
         group_link: form.group_link,
         required_group_members_threshold: form.required_group_members_threshold,
         required_invites_threshold: form.required_invites_threshold,
@@ -196,23 +203,37 @@ export default function AdminSettingsPage() {
 
       <Section
         title="Payment accounts"
-        description="Bank / mobile-money account numbers where tutors send their payments."
+        description="Phone number, Telegram username, and bank accounts where parents send their listing-fee payments."
         icon={<Banknote size={18} />}
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Telebirr number" value={form.telebirr} onChange={set("telebirr")} />
+          <Field label="Telegram username" hint="e.g. abugida_pay (without @)" value={form.telegram} onChange={set("telegram")} />
           <Field label="CBE account" value={form.cbe} onChange={set("cbe")} />
           <Field label="Other bank" hint="e.g. Awash: 0123-XXXX" value={form.bank} onChange={set("bank")} />
         </div>
       </Section>
 
       <Section
-        title="Job listing fee"
-        description="Anti-spam fee (ETB) charged to parents before a job is approved. Set 0 for free."
+        title="Listing fee & unlock cost"
+        description="Anti-spam fee charged to parents before a job is approved, and the Kulf a tutor spends to reveal each parent contact. Set the fee to 0 for free."
         icon={<Briefcase size={18} />}
       >
-        <div className="max-w-xs">
-          <Field label="Parent listing fee (ETB)" value={form.parent_listing_fee} onChange={set("parent_listing_fee")} type="number" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label="Parent listing fee (ETB)"
+            hint="0 disables — requests post instantly"
+            value={form.parent_listing_fee}
+            onChange={set("parent_listing_fee")}
+            type="number"
+          />
+          <Field
+            label="Kulf unlock cost"
+            hint="Kulf per parent contact (default 1)"
+            value={form.kulf_unlock_cost}
+            onChange={set("kulf_unlock_cost")}
+            type="number"
+          />
         </div>
       </Section>
 

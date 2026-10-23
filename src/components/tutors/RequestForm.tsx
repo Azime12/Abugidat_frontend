@@ -1,14 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Phone, GraduationCap, Clock, MessageSquare, CheckCircle2 } from "lucide-react";
+import { User, Phone, GraduationCap, Clock, MessageSquare, CheckCircle2, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import type { CreateRequestData, ParentRequest } from "@/types/request";
 import { requestService } from "@/services/api/requests";
 import { useAuth } from "@/contexts/auth-context";
+import { SchedulePicker } from "@/components/shared/SchedulePicker";
+import { useCurriculum } from "@/hooks/useCurriculum";
 import toast from "react-hot-toast";
 
-const GRADES = ["KG", "1-4", "5-8", "9-10", "11-12", "Uni"];
+// Legacy ranges → specific grades (used only to translate a tutor's stored
+// range into selectable specific grades).
+const LEGACY_GRADE_MAP: Record<string, string[]> = {
+  KG: ["KG 1", "KG 2", "KG 3"],
+  "1-4": ["Grade 1", "Grade 2", "Grade 3", "Grade 4"],
+  "5-8": ["Grade 5", "Grade 6", "Grade 7", "Grade 8"],
+  "9-10": ["Grade 9", "Grade 10"],
+  "11-12": ["Grade 11 Natural", "Grade 11 Social", "Grade 12 Natural", "Grade 12 Social"],
+  Uni: ["University"],
+};
 
 interface Props {
   tutorId: string;
@@ -24,6 +35,11 @@ export function RequestForm({
   onSuccess,
 }: Props) {
   const { user, isAuthenticated } = useAuth();
+  const { data: curriculumConfig } = useCurriculum();
+
+  // Live specific grades from the Ethiopian national curriculum (KG 1 … Grade 12).
+  const ethiopian = curriculumConfig?.curriculums?.find((c) => c.id === "et-national");
+  const liveGrades = ethiopian?.grades?.map((g) => g.label).filter((g) => g !== "All Levels") ?? [];
 
   const [form, setForm] = useState<CreateRequestData>(() => {
     const initialName = user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "";
@@ -32,12 +48,21 @@ export function RequestForm({
       tutorId,
       parentName: initialName,
       parentPhone: initialPhone,
-      gradeLevel: defaultGrade,
+      gradeLevels: [],
       note: "",
       preferredTime: "",
       consent: false,
     };
   });
+
+  // Pre-select the tutor's grade(s) once the live list is available.
+  useEffect(() => {
+    if (liveGrades.length === 0) return;
+    const defaults = LEGACY_GRADE_MAP[defaultGrade] ||
+      (defaultGrade && liveGrades.includes(defaultGrade) ? [defaultGrade] : []);
+    if (defaults.length === 0) return;
+    setForm((prev) => (prev.gradeLevels.length ? prev : { ...prev, gradeLevels: defaults }));
+  }, [liveGrades, defaultGrade]);
 
   const [isEditingContact, setIsEditingContact] = useState(false);
 
@@ -70,6 +95,23 @@ export function RequestForm({
     }
   };
 
+  const toggleGrade = (g: string) => {
+    setForm((prev) => {
+      const has = prev.gradeLevels.includes(g);
+      const gradeLevels = has
+        ? prev.gradeLevels.filter((x) => x !== g)
+        : [...prev.gradeLevels, g];
+      return { ...prev, gradeLevels };
+    });
+    if (errors.gradeLevels) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.gradeLevels;
+        return next;
+      });
+    }
+  };
+
   const validate = (): boolean => {
     const next: Record<string, string> = {};
 
@@ -85,8 +127,8 @@ export function RequestForm({
       next.parentPhone = "Enter a valid Ethiopian phone number";
     }
 
-    if (!form.gradeLevel) {
-      next.gradeLevel = "Please select a grade";
+    if (form.gradeLevels.length === 0) {
+      next.gradeLevels = "Please select at least one grade";
     }
 
     if (!form.consent) {
@@ -224,33 +266,57 @@ export function RequestForm({
         </div>
       )}
 
-      {/* Grade */}
-      <Field icon={GraduationCap} label="Your child's grade" error={errors.gradeLevel}>
-        <select
-          value={form.gradeLevel}
-          onChange={(e) => update("gradeLevel", e.target.value)}
-          className={`w-full rounded-lg border bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0096D6] focus:ring-2 focus:ring-[#0096D6]/20 ${
-            errors.gradeLevel ? "border-red-400" : "border-gray-300"
-          }`}
-        >
-          {GRADES.map((g) => (
-            <option key={g} value={g}>
-              Grade {g}
-            </option>
-          ))}
-        </select>
-      </Field>
+      {/* Grade (multi-select) */}
+      <div>
+        <label className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
+          <GraduationCap className="h-4 w-4 text-[#0096D6]" />
+          Your child&apos;s grade
+        </label>
+        <p className="mb-2 text-xs text-gray-400">
+          Select one or more grades if you have multiple children
+        </p>
+        {liveGrades.length === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading grades…
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {liveGrades.map((g) => {
+              const active = form.gradeLevels.includes(g);
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggleGrade(g)}
+                  className={`rounded-full border px-3.5 py-2 text-xs font-bold transition ${
+                    active
+                      ? "border-[#0096D6] bg-[#0096D6] text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                  }`}
+                >
+                  {active && "✓ "}
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {errors.gradeLevels && (
+          <p className="mt-1 text-xs text-red-500">{errors.gradeLevels}</p>
+        )}
+      </div>
 
-      {/* Preferred time */}
-      <Field icon={Clock} label="Preferred schedule" hint="Optional — e.g. Weekdays after 4 PM">
-        <input
-          type="text"
+      {/* Preferred schedule */}
+      <div>
+        <label className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#2D2A32]">
+          <Clock className="h-4 w-4 text-[#0096D6]" />
+          Preferred schedule
+        </label>
+        <SchedulePicker
           value={form.preferredTime}
-          onChange={(e) => update("preferredTime", e.target.value)}
-          placeholder="e.g. Weekdays after 4 PM"
-          className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#0096D6] focus:ring-2 focus:ring-[#0096D6]/20"
+          onChange={(v) => update("preferredTime", v)}
         />
-      </Field>
+      </div>
 
       {/* Note */}
       <Field

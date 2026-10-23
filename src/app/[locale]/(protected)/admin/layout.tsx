@@ -7,7 +7,7 @@ import { Link, usePathname, useRouter } from "@/i18n/routing";
 import {
   LayoutDashboard, Users, GraduationCap, Briefcase,
   FileText, Handshake, LogOut, Menu, X,
-  Wallet, RotateCcw, Settings, Building2, Bell,
+  Wallet, RotateCcw, Settings, Building2, Bell, CreditCard,
 } from "lucide-react";
 
 const NAV = [
@@ -15,6 +15,8 @@ const NAV = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/tutors", label: "Tutors", icon: GraduationCap },
   { href: "/admin/jobs", label: "Jobs & Requests", icon: Briefcase },
+  { href: "/admin/requests", label: "Requests", icon: FileText },
+  { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/matches", label: "Matches", icon: Handshake },
   { href: "/admin/agents", label: "Agents", icon: Building2 },
   { href: "/admin/waitlist", label: "Waitlist Demand", icon: Bell },

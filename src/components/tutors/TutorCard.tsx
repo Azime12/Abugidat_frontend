@@ -46,7 +46,7 @@ export function TutorCard({
                   <BadgeCheck className="h-4 w-4 shrink-0 text-[#0096D6]" />
                 )}
               </div>
-              <p className="mt-0.5 text-sm text-gray-500">
+              <p className="mt-0.5 line-clamp-2 break-words text-sm text-gray-500">
                 {tutor.subjects.join(" · ")}
               </p>
             </div>
@@ -66,10 +66,12 @@ export function TutorCard({
           </div>
 
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
-              {tutor.areaName}
-              {tutor.distanceBand && ` · ${tutor.distanceBand}`}
+            <span className="flex min-w-0 max-w-full items-center gap-1">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+              <span className="truncate">{tutor.areaName}</span>
+              {tutor.distanceBand && (
+                <span className="shrink-0">· {tutor.distanceBand}</span>
+              )}
             </span>
             <a
               href={getMapLocationUrl({ lat: tutor.lat, lng: tutor.lng, locationName: tutor.areaName })}
@@ -98,7 +100,7 @@ export function TutorCard({
             key={grade}
             className="rounded-full bg-[#E8F4F8] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#006A9B]"
           >
-            Grade {grade}
+            {grade}
           </span>
         ))}
       </div>
