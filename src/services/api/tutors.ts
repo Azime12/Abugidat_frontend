@@ -282,8 +282,15 @@ export const tutorService = {
         bio: t.experience || "",
         distanceBand:
           item.distance != null ? `${Number(item.distance).toFixed(1)} km` : undefined,
+        lat: Number(t.latitude ?? t.lat ?? item.latitude ?? item.lat) || undefined,
+        lng: Number(t.longitude ?? t.lng ?? item.longitude ?? item.lng) || undefined,
+        isFeatured: !!t.is_featured,
       } as Tutor;
     });
+  },
+
+  nearby(lat: number, lng: number, radiusKm = 25) {
+    return this.nearbyTutors(lat, lng, radiusKm);
   },
 
   async searchWithFallback(params: {

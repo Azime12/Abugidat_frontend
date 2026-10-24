@@ -1,4 +1,4 @@
-﻿import client from "@/lib/api-client";
+import client from "@/lib/api-client";
 
 export interface LocationSuggestion {
   name: string;
@@ -32,4 +32,21 @@ export const locationService = {
     client.get<{ success: boolean; nearbyLandmarks: Landmark[] }>("/location/nearby-landmarks", {
       params: { lat, lng, radius, limit },
     }),
+
+  geocode: async (location: string): Promise<{ lat: number; lng: number; displayName?: string } | null> => {
+    try {
+      const res = await client.get<any>("/location/geocode", {
+        params: { location },
+      });
+      const data = res.data;
+      const lat = Number(data.lat ?? data.latitude);
+      const lng = Number(data.lng ?? data.longitude);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng, displayName: data.displayName || data.formattedAddress || location };
+      }
+    } catch {
+      // Fallback
+    }
+    return null;
+  },
 };

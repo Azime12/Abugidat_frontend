@@ -18,6 +18,7 @@ interface ConfigForm {
   bank: string;
   parent_listing_fee: number;
   kulf_unlock_cost: number;
+  support_username: string;
   group_link: string;
   required_group_members_threshold: number;
   required_invites_threshold: number;
@@ -39,6 +40,7 @@ const DEFAULT_FORM: ConfigForm = {
   bank: "Awash: 0123-XXXX",
   parent_listing_fee: 0,
   kulf_unlock_cost: 1,
+  support_username: "",
   group_link: "https://t.me/AbugidaTutors_group",
   required_group_members_threshold: 0,
   required_invites_threshold: 0,
@@ -131,6 +133,7 @@ export default function AdminSettingsPage() {
       bank: accounts.bank || DEFAULT_FORM.bank,
       parent_listing_fee: Number(c.parent_listing_fee ?? DEFAULT_FORM.parent_listing_fee),
       kulf_unlock_cost: Number(c.kulf_unlock_cost ?? DEFAULT_FORM.kulf_unlock_cost),
+      support_username: c.support_username || "",
       group_link: c.group_link || DEFAULT_FORM.group_link,
       required_group_members_threshold: Number(c.required_group_members_threshold ?? 0),
       required_invites_threshold: Number(c.required_invites_threshold ?? 0),
@@ -150,6 +153,7 @@ export default function AdminSettingsPage() {
         payment_accounts: { telebirr: form.telebirr, telegram: form.telegram, cbe: form.cbe, bank: form.bank },
         parent_listing_fee: form.parent_listing_fee,
         kulf_unlock_cost: form.kulf_unlock_cost,
+        support_username: form.support_username,
         group_link: form.group_link,
         required_group_members_threshold: form.required_group_members_threshold,
         required_invites_threshold: form.required_invites_threshold,
@@ -238,17 +242,35 @@ export default function AdminSettingsPage() {
       </Section>
 
       <Section
-        title="Group & channel"
-        description="Telegram group link and the minimum members a tutor must invite."
+        title="Support & Community Groups"
+        description="Configure the direct Telegram support chat account and the jobs community group."
         icon={<LinkIcon size={18} />}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Group / channel link" value={form.group_link} onChange={set("group_link")} />
+          <Field
+            label="Support Telegram username"
+            hint="e.g. AbugidaSupport (without @) — users chat directly with this account for support"
+            value={form.support_username}
+            onChange={set("support_username")}
+          />
+          <Field
+            label="Jobs community group link"
+            hint="e.g. https://t.me/AbugidaTutors_group — where open jobs are posted"
+            value={form.group_link}
+            onChange={set("group_link")}
+          />
           <Field
             label="Required group members"
             hint="Min members a tutor must bring (0 = disabled)"
             value={form.required_group_members_threshold}
             onChange={set("required_group_members_threshold")}
+            type="number"
+          />
+          <Field
+            label="Required bot referrals"
+            hint="Min new users a tutor must invite to start the bot (0 = disabled)"
+            value={form.required_bot_referrals_threshold}
+            onChange={set("required_bot_referrals_threshold")}
             type="number"
           />
         </div>

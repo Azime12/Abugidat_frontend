@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -16,6 +17,12 @@ import { TutorCard } from "@/components/tutors/TutorCard";
 import { TutorFilters } from "@/components/tutors/TutorFilters";
 import { tutorService, applyFilters, type TutorMapPoint } from "@/services/api/tutors";
 import { getApiErrorMessage } from "@/lib/api-errors";
+import {
+  preDetectUserLocation,
+  getCachedUserLocation,
+  getFastUserLocation,
+  saveRecentLocation,
+} from "@/lib/locationCache";
 import type { TutorSearchFilters, Tutor } from "@/types/tutor";
 
 const TutorMap = dynamic(
@@ -43,9 +50,53 @@ const DEFAULT_FILTERS: TutorSearchFilters = {
 };
 
 export function TutorsPageClient() {
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState<TutorSearchFilters>(DEFAULT_FILTERS);
   const [inputValue, setInputValue] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Silently pre-detect user location in background on mount
+  useEffect(() => {
+    preDetectUserLocation();
+  }, []);
+
+  // Sync URL query params (from Hero search bar or direct deep-links)
+  useEffect(() => {
+    const gradeParam = searchParams.get("grade");
+    const areaParam = searchParams.get("area") || searchParams.get("location");
+    const qParam = searchParams.get("query") || searchParams.get("q");
+    const latParam = searchParams.get("lat");
+    const lngParam = searchParams.get("lng");
+
+    const isYourLocation =
+      areaParam &&
+      (areaParam.toLowerCase().includes("your location") ||
+        areaParam.toLowerCase().includes("my location"));
+
+    // Don't pollute filters.query with "Your location" or GPS coordinates
+    const textQuery = qParam || (!isYourLocation && !latParam ? areaParam : "") || "";
+
+    setFilters((prev) => ({
+      ...prev,
+      gradeLevels: gradeParam ? [gradeParam as any] : prev.gradeLevels,
+      query: textQuery,
+    }));
+    if (textQuery) {
+      setInputValue(textQuery);
+    }
+
+    if (latParam && lngParam) {
+      const lat = parseFloat(latParam);
+      const lng = parseFloat(lngParam);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setView("map");
+        handleLocationPicked(
+          [lat, lng],
+          isYourLocation ? "Your location" : areaParam || "Selected location"
+        );
+      }
+    }
+  }, [searchParams]);
 
   // L2: clear pending debounce on unmount
   useEffect(() => {
@@ -63,6 +114,28 @@ export function TutorsPageClient() {
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [nearbyTutors, setNearbyTutors] = useState<Tutor[]>([]);
   const [userCoords, setUserCoords] = useState<[number, number] | undefined>(undefined);
+
+  const handleLocationPicked = async (coords: [number, number], label?: string) => {
+    setUserCoords(coords);
+    setNearbyActive(true);
+    setNearbyLoading(true);
+    try {
+      const list = await tutorService.nearbyTutors(coords[0], coords[1]);
+      setNearbyTutors(list);
+      if (label && !label.toLowerCase().includes("your location")) {
+        saveRecentLocation(label, coords);
+      }
+      toast.success(
+        `Found ${list.length} tutor${list.length !== 1 ? "s" : ""} near ${label || "selected location"}`,
+        { icon: "📍" }
+      );
+    } catch (err) {
+      console.error("Failed to load nearby tutors:", err);
+      toast.error("Could not load tutors for this location");
+    } finally {
+      setNearbyLoading(false);
+    }
+  };
 
   // Debounce search input → update filters.query after 350 ms
   const handleSearchInput = (val: string) => {
@@ -111,51 +184,31 @@ export function TutorsPageClient() {
       }));
   }, [tutors]);
 
-  const handleNearMe = () => {
+  const handleNearMe = async () => {
     if (nearbyActive) {
       setNearbyActive(false);
       setNearbyTutors([]);
       setUserCoords(undefined);
       return;
     }
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast.error("Location is not supported on this device");
+
+    // 1. Instant: Check if location is already pre-detected in background
+    const cached = getCachedUserLocation();
+    if (cached) {
+      handleLocationPicked(cached, "Your location");
       return;
     }
+
+    // 2. Fast fallback (uses short timeout, non-blocking)
     setNearbyLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const lat = Number(pos.coords.latitude);
-          const lng = Number(pos.coords.longitude);
-          if (
-            !isNaN(lat) &&
-            !isNaN(lng) &&
-            isFinite(lat) &&
-            isFinite(lng) &&
-            lat >= -90 &&
-            lat <= 90 &&
-            lng >= -180 &&
-            lng <= 180
-          ) {
-            setUserCoords([lat, lng]);
-            const results = await tutorService.nearbyTutors(lat, lng);
-            setNearbyTutors(results);
-            setNearbyActive(true);
-          } else {
-            toast.error("Could not obtain valid coordinates");
-          }
-        } catch (err) {
-          toast.error(getApiErrorMessage(err, "Could not find nearby tutors"));
-        } finally {
-          setNearbyLoading(false);
-        }
-      },
-      () => {
-        setNearbyLoading(false);
-        toast.error("Location permission denied");
-      }
-    );
+    try {
+      const coords = await getFastUserLocation();
+      handleLocationPicked(coords, "Your location");
+    } catch {
+      toast.error("Could not detect location. Center map manually.");
+    } finally {
+      setNearbyLoading(false);
+    }
   };
 
   const handleSelectTutorFromMap = (point: TutorMapPoint) => {
@@ -169,14 +222,14 @@ export function TutorsPageClient() {
   return (
     <div className="min-h-screen bg-[#FFF8F0]">
       {/* ── Page Header ── */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="sticky top-0 z-30 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-[#2D2A32]">
+              <h1 className="text-xl sm:text-2xl font-black text-[#2D2A32]">
                 Find an Abugida Tutor
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-0.5 text-xs text-gray-500">
                 {nearbyLoading
                   ? "Detecting nearest tutors around you..."
                   : nearbyActive
@@ -190,23 +243,10 @@ export function TutorsPageClient() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-        <div className="flex flex-col gap-6 lg:flex-row">
-          {/* ── Filters Sidebar (sticky on desktop; scrolls with page on mobile) ── */}
-          <div className={`${showFilters ? "block" : "hidden"} shrink-0 lg:block lg:w-72 lg:self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto`}>
-            <TutorFilters
-              filters={filters}
-              onChange={setFilters}
-              onReset={() => {
-                setFilters(DEFAULT_FILTERS);
-                setInputValue("");
-              }}
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            {/* ── Search Bar Row ── */}
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+      <div className="sticky top-[73px] z-20 border-b border-gray-100 bg-[#FFF8F0]/95 backdrop-blur-sm shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3">
+          {/* ── Search Bar Row (sticky) ── */}
+          <div className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
@@ -292,8 +332,27 @@ export function TutorsPageClient() {
                   <span>Map</span>
                 </button>
               </div>
-            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* ── Scrollable content: Sidebar + Results ── */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          {/* Filters Sidebar – sticky on desktop */}
+          <div className={`${showFilters ? "block" : "hidden"} shrink-0 lg:block lg:w-72 lg:self-start lg:sticky lg:top-[140px] lg:max-h-[calc(100vh-160px)] lg:overflow-y-auto`}>
+            <TutorFilters
+              filters={filters}
+              onChange={setFilters}
+              onReset={() => {
+                setFilters(DEFAULT_FILTERS);
+                setInputValue("");
+              }}
+            />
+          </div>
+
+          {/* Results area */}
+          <div className="flex-1 min-w-0">
             {/* Active search badge */}
             {filters.query && (
               <div className="mb-4 flex items-center gap-2">
@@ -347,6 +406,7 @@ export function TutorsPageClient() {
                   points={currentMapPoints.length > 0 ? currentMapPoints : undefined}
                   selectedTutorId={selectedTutorId}
                   onSelectTutor={handleSelectTutorFromMap}
+                  onLocationSelect={handleLocationPicked}
                   heightClass="h-[580px]"
                 />
                 <div className="border-t border-gray-200 pt-6">
